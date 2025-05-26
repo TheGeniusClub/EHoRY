@@ -2,7 +2,7 @@
 
 ![GitHub](https://img.shields.io/badge/License-开源协议-blue)
 ![Platform](https://img.shields.io/badge/Platform-Android-green)
-![English](https://github.com/yu13140/yuhideroot/blob/main/readme_en.md)
+[English](https://github.com/yu13140/EHoRY/blob/main/readme_en.md)
 
 一个用于隐藏Android设备Root状态和绕过检测的综合脚本工具，支持Magisk、KernelSU、APatch等多种环境。
 
@@ -23,7 +23,7 @@
 ## 使用方法
 1. **下载脚本**  
    ```bash
-   curl -LJO https://raw.githubusercontent.com/yu13140/yuhideroot/main/一键解决隐藏问题.sh
+   curl -LJO https://raw.githubusercontent.com/yu13140/EHoRY/main/一键解决隐藏问题.sh
    ```
 2. **赋予权限**  
    ```bash
@@ -43,8 +43,8 @@
 
 ## 许可证
 本项目采用**GPL-3.0**许可证
-想知道更多细节？[LICENSE](https://github.com/yu13140/yuhideroot/blob/main/LICENSE).
+想知道更多细节？[LICENSE](https://github.com/yu13140/EHoRY/blob/main/LICENSE).
 
 ## 联系
 - 作者: [酷安@yu13140](https://www.coolapk.com/u/24898135)
-- 问题: [GitHub Issues](https://github.com/yu13140/yuhideroot/issues)
+- 问题: [GitHub Issues](https://github.com/yu13140/EHoRY/issues)

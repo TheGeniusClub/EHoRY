@@ -21,7 +21,7 @@ A comprehensive tool to hide root status and bypass detection on Android devices
 ## Usage
 1. **Download Script**  
    ```bash
-   curl -LJO https://raw.githubusercontent.com/yu13140/yuhideroot/main/EHoRY.sh
+   curl -LJO https://raw.githubusercontent.com/yu13140/EHoRY/main/EHoRY.sh
    ```
 2. **Grant Permissions**  
    ```bash
@@ -40,8 +40,8 @@ A comprehensive tool to hide root status and bypass detection on Android devices
 
 ## License
 This project is licensed under the **GPL-3.0 License**.  
-For details, see [LICENSE](https://github.com/yu13140/yuhideroot/blob/main/LICENSE).
+For details, see [LICENSE](https://github.com/yu13140/EHoRY/blob/main/LICENSE).
 
 ## Contact
 - Author: [酷安@yu13140](https://www.coolapk.com/u/24898135)
-- Issues: [GitHub Issues](https://github.com/yu13140/yuhideroot/issues)
+- Issues: [GitHub Issues](https://github.com/yu13140/EHoRY/issues)
