@@ -19,18 +19,20 @@
 特别地：如果执行脚本时出现了错误，请你私信酷安@yu13140以报告脚本错误
 
 ### Changelog 日志
-#从v4.2ultra版本开始，脚本支持Github云端更新
+> 从v4.2ultra版本开始，脚本支持Github云端更新
 
-####v2
+#### v2
 1.删除了对红魔手机的支持
 2.针对data分区未解密的用户，切换了脚本加密方式
-##v2.1beta
+
+#### v2.1beta
 1.Holmes：Miscellaneous Check (a)
 2.Ruru：环境检测中TWRP/XPrivacyLua/Xposed Edge被发现
-##v2.2
+
+##### v2.2
 1.快捷开关开发者模式
 
-####v3.0beta
+#### v3.0beta
 1.优化了脚本执行UI界面：主菜单优化为滚动形式
 2.稍微精简且美化了脚本代码
 3.取消了对索尼手机的支持
@@ -39,7 +41,7 @@
 6.Hunter：SafetyDetectClient Check [Root/Unlock]
 7.Hunter：Find Risk File(shizuku)
 
-####v3.1
+#### v3.1
 1.添加了对APatch与APatch Next的识别
 ##v3.1orange
 1.添加了对已经刷入Zygisk Next模块的KSU的识别
@@ -48,7 +50,7 @@
 2.添加了对KernelSU与KernelSU Next的识别
 3.修正了Futile Hide (10)的错误代码
 
-####v4.0RC
+#### v4.0RC
 1.使用ChatGPT对代码进行了部分精简和美化
 2.添加了对APatch Ci和Kitsune Mask(狐狸面具)的识别
 3.加快了脚本响应速度
@@ -56,7 +58,7 @@
 5.Holmes：Something Wrong
 6.Native Test：Futile Hide (01)
 
-####v4.1
+#### v4.1
 1.添加了更新模块的功能
 2.修复了Holmes：Something Wrong的代码错误
 3.Native Test：Conventional Tests (1)      
@@ -64,14 +66,14 @@
 5.Native Test：Found Injection (04)
 6.(实验性)Holmes：Found Injection (9ff)/Evil Modification (7)
 
-####v4.1FIX
+#### v4.1FIX
 1.添加了配置隐藏应用列表功能(过Luna)
 2.修复了Momo：设备正在使用非原厂系统的错误代码
 3.删除了对APatch Ci的识别(Ci实在是太多版本了，但能正常用)
 4.优化了Holmes：Miscellaneous Check (a)的代码
 5.Hunter：当前手机 已经被解锁/Boot分区签名失败
 
-####v4.2
+#### v4.2
 1.添加了一键模块的功能(KernelSU GKI模式除外)
 2.感谢酷安@Aurora星空_Z的支持
 3.一键模块功能移除对APatch系列的支持(peekaboo请自行嵌入)
@@ -79,7 +81,7 @@
 5.修复了识别Root方式失误的问题
 6.增强了脚本兼容性
 
-####v4.2ultra
+#### v4.2ultra
 1.修复了部分APatch以及KernelSU安装不了模块的问题
 2.优化了部分代码，增强了对低版本Root管理器的兼容性
 3.一键模块功能已支持用户手动选择是否删除所有模块
@@ -90,13 +92,13 @@
 8.Magisk检测应用：init.rc已被Magisk修改
 9.Momo：tee损坏
 
-####v4.3
+#### v4.3
 1.自动更新LSPosed配置(仅限刚刷模块的用户)
 2.添加一键安装检测软件10件套的功能
 3.美化了互动界面UI：更改字体颜色
 4.修复了脚本权限不足的问题
 
-####v4.4
+#### v4.4
 1.由于Gitlab的原因，现把脚本迁移到Github
 2.以后将在Github云端更新，使用cdn加速
 3.修复了一键模块和Tricky Store模块安装不了的问题
@@ -104,14 +106,14 @@
 5.增加了对多种Root共存的检测
 6.系统环境使用脚本自带curl(8.12.0-DEV)
 
-####v4.5
+#### v4.5
 1.添加了安装当前设备上的指定模块的功能
 2.针对MKSU12074及更高版本存在的问题进行修复
 3.取消对Termux的支持(可能会导致某些问题)
 4.脚本提供的keybox不再有效，请自行寻找
 5.优化了过检测软件功能的UI界面
 
-####v4.5Prominent
+#### v4.5Prominent
 1.感谢酷安@传说中的小菜叶的技术支持
 2.(实验性)支持APatch半自动刷入cherish_peekaboo模块
 3.考虑到兼容问题，我们更改了以下内容
@@ -128,13 +130,13 @@
 8.(实验性)Native Test：Futile Hide (8)
 9.Native Detector：检测到Boot状态异常
 
-####v4.6Foresight
+#### v4.6Foresight
 1.优化了部分代码
 2.解决了一些小问题
 3.优化了多线路下载服务
 4.(实验)Native Detector：Magic Mount
 
-####v4.7_Escondido (v1)
+#### v4.7_Escondido (v1)
 1.加强了对执行代码错误的检测
 2.优化了部分代码
 3.更新模块
