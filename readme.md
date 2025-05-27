@@ -1,7 +1,7 @@
 # EHoRY
 
-![GitHub](https://img.shields.io/badge/License-开源协议-blue)![Platform](https://img.shields.io/badge/Platform-Android-green)
-[English](https://github.com/yu13140/EHoRY/blob/main/readme_en.md) | [更新日志](https://github.com/yu13140/EHoRY/blob/main/update_log.md)
+![GitHub](https://img.shields.io/badge/License-开源协议-blue)![Platform](https://img.shields.io/badge/Platform-Android-green) 
+[English](readme_en.md) | [更新日志](update_log.md)
 
 一个用于隐藏Android设备Root状态和绕过检测的综合脚本工具，支持Magisk、KernelSU、APatch等多种环境。
 A comprehensive tool to hide root status and bypass detection on Android devices, supporting Magisk, KernelSU, APatch, etc.
@@ -42,7 +42,7 @@ A comprehensive tool to hide root status and bypass detection on Android devices
 ---
 
 ## 许可证
-本项目采用**GPL-3.0**许可证
+本项目采用**CC BY-NC-SA 4.0**许可证
 想知道更多细节？[LICENSE](https://github.com/yu13140/EHoRY/blob/main/LICENSE).
 
 ## 联系

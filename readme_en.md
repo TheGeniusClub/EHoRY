@@ -40,7 +40,7 @@ A comprehensive tool to hide root status and bypass detection on Android devices
 ---
 
 ## License
-This project is licensed under the **GPL-3.0 License**.  
+This project is licensed under the **CC BY-NC-SA 4.0 License**.  
 For details, see [LICENSE](https://github.com/yu13140/EHoRY/blob/main/LICENSE).
 
 ## Contact
