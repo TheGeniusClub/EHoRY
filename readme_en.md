@@ -1,7 +1,7 @@
-# EHoRY (One-Click Root Hider Script)
+# EHoRY
 
-![GitHub](https://img.shields.io/badge/License-Open_Source-blue)
-![Platform](https://img.shields.io/badge/Platform-Android-green)
+![GitHub](https://img.shields.io/badge/License-Open_Source-blue)![Platform](https://img.shields.io/badge/Platform-Android-green)
+[ChangeLog](https://github.com/yu13140/EHoRY/blob/main/update_log.md)
 
 A comprehensive tool to hide root status and bypass detection on Android devices, supporting Magisk, KernelSU, APatch, etc.
 
@@ -35,6 +35,7 @@ A comprehensive tool to hide root status and bypass detection on Android devices
 ## Warnings
 1. **Backup Data**: Always backup before operation.
 2. **Recovery Ready**: Ensure device can enter Recovery mode.
+3. **Chinese Only**：At present, the output of the script is only Chinese. I welcome you to add your own language to the script.
 
 ---
 

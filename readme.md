@@ -1,10 +1,10 @@
-# EHoRY (一键解决隐藏问题脚本)
+# EHoRY
 
-![GitHub](https://img.shields.io/badge/License-开源协议-blue)
-![Platform](https://img.shields.io/badge/Platform-Android-green)
-[English](https://github.com/yu13140/EHoRY/blob/main/readme_en.md)
+![GitHub](https://img.shields.io/badge/License-开源协议-blue)![Platform](https://img.shields.io/badge/Platform-Android-green)
+[English](https://github.com/yu13140/EHoRY/blob/main/readme_en.md) | [更新日志](https://github.com/yu13140/EHoRY/blob/main/update_log.md)
 
 一个用于隐藏Android设备Root状态和绕过检测的综合脚本工具，支持Magisk、KernelSU、APatch等多种环境。
+A comprehensive tool to hide root status and bypass detection on Android devices, supporting Magisk, KernelSU, APatch, etc.
 
 ## 功能特性
 - **多环境支持**: 兼容Magisk、KernelSU、APatch等Root方案。
@@ -23,15 +23,15 @@
 ## 使用方法
 1. **下载脚本**  
    ```bash
-   curl -LJO https://raw.githubusercontent.com/yu13140/EHoRY/main/一键解决隐藏问题.sh
+   curl -LJO https://raw.githubusercontent.com/yu13140/EHoRY/main/EHoRY.sh
    ```
 2. **赋予权限**  
    ```bash
-   chmod +x 一键解决隐藏问题.sh
+   chmod +x EHoRY.sh
    ```
 3. **以Root权限运行**  
    ```bash
-   su -c ./一键解决隐藏问题.sh
+   su -c ./EHoRY.sh
    ```
 
 ## 注意事项
