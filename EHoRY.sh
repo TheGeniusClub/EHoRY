@@ -934,6 +934,7 @@ chlist() {
 NUMLIST=(
            "$GR你正在使用 配置隐藏应用列表 功能"
            "此功能只适合下面含有包名的隐藏应用列表使用"
+           "不支持的应用，会把配置文件下载到/sdcard/Download/文件夹内"
            "支持的包名：com.tsng.hidemyapplist"
            "支持的包名：com.tencent.wifimanager"
            "支持的包名：com.hicorenational.antifraud"
@@ -1021,13 +1022,21 @@ if [ -d /data/data/com.tsng.hidemyapplist ] || [ -d /data/data/com.tencent.wifim
         fi    
         cat "$file1" > "$file2"
         sleep 1.4
-        echos "$GR配置已完成，退出脚本$RE" 
+        echos "$GR配置已完成$RE" 
     fi
 rm -f $file1
-exit 0
+ends
 else
-    echos "$YE没有找到隐藏应用列表应用$RE"
-    exit 0
+    echos "$YE没有找到隐藏应用列表应用"
+    echos "下载下来的配置文件将存放在/sdcard/Download/文件夹里"
+    echos "需要您手动到隐藏应用列表里点击还原配置$RE"
+    echos "$GR正在下载配置文件$RE"
+    $DOWN1 https://fs-im-kefu.7moor-fs1.com/ly/4d2c3f00-7d4c-11e5-af15-41bf63ae4ea0/1737828707591/config.json $DOWN3
+    sleep 0.1
+    echos " "
+    mv -f $file1 /sdcard/Download/配置隐藏应用列表.json
+    echos "已将配置文件保存在 /sdcard/Download/ 中"
+    ends
 fi
 }
 
@@ -1046,7 +1055,7 @@ if [ -d /data/data/com.tsng.hidemyapplist ] || [ -d /data/data/com.tencent.wifim
        rm -f $backup_file
        sleep 1
        echos "$YE恢复备份成功$RE"
-       exit 0
+       ends
     else
        echos "$YE错误：备份文件不存在！$RE"
        exit 0
@@ -1162,6 +1171,14 @@ down_cdn "04d23e833db2aa2dde7c37234491230baf6812cc0a6e33cd04799a61806fbd6e"
 
 awarmlist() {
 clear
+CDNUM=1
+speedforcheck
+clear
+if [ $CDNUM = 1 ]; then
+    echos "$YE在刷入模块之前，检测到您的网络存在较大波动"
+    echos "建议您不要选择将全部模块删除 ！! ！$RE"
+    echos " "
+fi
 WARMLIST=(
            "$GR你正在使用 一键刷入所需模块 功能$RE"           
            "                              "
@@ -1350,8 +1367,7 @@ yuhide() {
     setenforce 1
     setenforce 0
     echos "$YE正在下载必要文件中$RE"
-    CDNUM=1 && mod=1
-    speedforcheck
+    mod=1    
     cdn_url="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/ARMIAS.zip"
     down_cdn "39ac2b238429db3659273f2e4950f5ae81d75e07c510a04c41a45ebcc9113b6d"   
      

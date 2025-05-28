@@ -42,7 +42,7 @@ A comprehensive tool to hide root status and bypass detection on Android devices
 ---
 
 ## 许可证
-本项目采用**CC BY-NC-SA 4.0**许可证
+本项目采用**CC BY-NC-SA 4.0**许可证  
 想知道更多细节？[LICENSE](https://github.com/yu13140/EHoRY/blob/main/LICENSE).
 
 ## 联系
