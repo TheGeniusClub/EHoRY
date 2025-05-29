@@ -10,7 +10,7 @@ YE='\033[1;33m'
 RE='\033[0m'
 WH='\033[1;37m'
 
-waitingstart() {
+waitingstart() { 
     if [ ! "$(whoami)" = "root" ]; then
         echo "当前脚本的所有者为: $(whoami)"
         echo "- 本脚本未获得 Root 权限，请授权"
@@ -27,8 +27,8 @@ waitingstart() {
     
     if [[ $yudir != $TMP_DIR ]]; then
         cp -af $0 $TMP_DIR/start.sh
-        chmod -R 777 $TMP_DIR
-        sh $TMP_DIR/start.sh
+        chmod -R 777 $TMP_DIR      
+        exec sh $TMP_DIR/start.sh
     fi    
 }
 
@@ -185,14 +185,20 @@ esac
 
 down_cdn() {
 module_install() {
+if [ $deletemodule = "true" ]; then
+    rm -rf /data/adb/modules/*
+    rm -rf /data/adb/lspd/
+    rm -rf /data/adb/modules_update/
+fi
 echos " "                                       
 echos "$YE正在为您安装模块$RE"
 installer
+unset -v THISHA && unset -v cdn_url
 rm -f "$MODULE_DE" && mod=0
 }
 warmtocdn
 cdncheck
-[ -z $THISHA ] || THISHA="$1"
+THISHA="$1"
 MOD_URL="${CDN}$cdn_url"
 sizer
 $DOWN1 $MOD_URL $DOWN2
@@ -213,12 +219,11 @@ while [ $? -ne 0 ]; do
         echos "$YE检测到下载失败，正在为您切换下载线路$RE"
         CDNUM=$(($CDNUM+1))
     fi        
-    down_cdn  
+    down_cdn "$1"
 done
 integritycheck
 sleep 0.1
 [ "$MODULE_DE" = "$YSHELL_PATH/installmodule.zip" ] || MODULE_DE="$YSHELL_PATH/installmodule.zip"
-unset -v THISHA && unset -v cdn_url
 [ $mod = 1 ] && module_install || return
 }
 
@@ -1171,14 +1176,6 @@ down_cdn "04d23e833db2aa2dde7c37234491230baf6812cc0a6e33cd04799a61806fbd6e"
 
 awarmlist() {
 clear
-CDNUM=1
-speedforcheck
-clear
-if [ $CDNUM = 1 ]; then
-    echos "$YE在刷入模块之前，检测到您的网络存在较大波动"
-    echos "建议您不要选择将全部模块删除 ！! ！$RE"
-    echos " "
-fi
 WARMLIST=(
            "$GR你正在使用 一键刷入所需模块 功能$RE"           
            "                              "
@@ -1197,7 +1194,7 @@ WARMLIST=(
 	read deleteyn
     case $deleteyn in
     1) 
-    echos "$GR你选择了删除所有模块$RE"; rm -rf /data/adb/modules/*; rm -rf /data/adb/shamiko/; rm -rf /data/adb/lspd/; rm -rf /data/adb/zygisksu/; rm -rf /data/adb/tricky_store/; rm -rf /data/adb/modules_update/; yuhide ;;
+    echos "$GR你选择了删除所有模块$RE"; deletemodule=true ; yuhide ;;
     2) 
     echos "$GR你选择了保留当前模块$RE"; yuhide ;;
     *) 
@@ -1367,9 +1364,11 @@ yuhide() {
     setenforce 1
     setenforce 0
     echos "$YE正在下载必要文件中$RE"
-    mod=1    
+    mod=1 & CDNUM=1
+    speedforcheck
+      
     cdn_url="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/ARMIAS.zip"
-    down_cdn "39ac2b238429db3659273f2e4950f5ae81d75e07c510a04c41a45ebcc9113b6d"   
+    down_cdn "39ac2b238429db3659273f2e4950f5ae81d75e07c510a04c41a45ebcc9113b6d"    
      
     BOOTHASH="$(getprop ro.boot.vbmeta.digest 2>/dev/null)"
     three_party="$(printf '0%.0s' {1..64})"
@@ -1507,12 +1506,12 @@ start() {
 }       
 
 rm -f $MODULE_DE
+waitingstart
 trap "settings put global adb_enabled 0;settings put global development_settings_enabled 0" EXIT
 clear
 settings put global adb_enabled 1
 settings put global development_settings_enabled 1
 detect_environment
-waitingstart
 
 if [[ $SHELL != *mt* ]]; then
     if [[ $SHELL == *termux* ]]; then
