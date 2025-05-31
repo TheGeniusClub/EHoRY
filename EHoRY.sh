@@ -1368,7 +1368,7 @@ yuhide() {
     speedforcheck
       
     cdn_url="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/ARMIAS.zip"
-    down_cdn "39ac2b238429db3659273f2e4950f5ae81d75e07c510a04c41a45ebcc9113b6d"    
+    down_cdn "4168b638f47bf7efa488383bbb6ad8ffee4a172f25e0265db7648f50eac7d27b"    
      
     BOOTHASH="$(getprop ro.boot.vbmeta.digest 2>/dev/null)"
     three_party="$(printf '0%.0s' {1..64})"
