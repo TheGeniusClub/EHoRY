@@ -624,8 +624,8 @@ description=解决Native Detector提示检测到Boot状态异常问题" >>/data/
 
 ndzygiskhide() {
 if [ -d /data/adb/modules/zygisksu/ ]; then
-    ZVC="$(sed -n '4p' /data/adb/modules/zygisksu/module.prop 2>/dev/null)"
-    if [ $ZVC = "versionCode=512" ]; then
+    ZVC="$(sed -n '4p' /data/adb/modules/zygisksu/module.prop | cut -d = -f2 2>/dev/null)"
+    if [ $ZVC -ge 512 ]; then
         touch /data/adb/zygisksu/no_mount_znctl
         sleep 1.4
     else
