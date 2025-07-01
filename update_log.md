@@ -151,7 +151,7 @@
 9.Luna：发现风险应用(com.byyoung.setting)  
 10.Holmes：Property Modified (1) 
 
-#### v4.8_Mysterious (v1.1)
+#### v4.8_Mysterious (v2)
 1.修复了APatch无法嵌入peekaboo模块的问题 
 2.修复KSU用户无法安装LSPosed模块的问题 
 3.修复春秋检测 检测出Found Injection(c) 
