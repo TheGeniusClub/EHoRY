@@ -149,4 +149,14 @@
 7.取消脚本必须放在/data的限制(必须解压)  
 8.重启对mksu的支持(如仍有问题请反馈)  
 9.Luna：发现风险应用(com.byyoung.setting)  
-10.Holmes：Property Modified (1)
+10.Holmes：Property Modified (1) 
+
+#### v4.8_Mysterious (v1.1)
+1.修复了APatch无法嵌入peekaboo模块的问题 
+2.修复KSU用户无法安装LSPosed模块的问题 
+3.修复春秋检测 检测出Found Injection(c) 
+4.添加Nohello模块(仅APatch) 
+5.取消配置LSPosed模块的功能 
+6.可选择嵌入Nohello内核模块(仅APatch高版本) 
+7.优化对错误输出的处理 
+8.禁止校验一键模块 
