@@ -65,7 +65,7 @@ if [[ $KERNELSU_FLAG -eq 1 ]]; then
     ENVIRONMENT="KernelSU"    
     KSU_VERSION="$(/data/adb/ksud -V | sed 's/ksud //g' | cut -d "-" -f1)"
     if [[ $KSU_VERSION == "zako"* ]]; then
-        ENVIRONMENT="SukiSU Ultra"
+        ENVIRONMENT="SukiSU"
         KSU_VERSION="$(/data/adb/ksud -V | sed 's/zakozako //g' | cut -d "-" -f1)"
     else
         KSU_APP_VER="$(dumpsys package me.weishu.kernelsu | grep versionCode | sed 's/^.*versionCode=//g' | sed 's/minSdk.*$//g')"
@@ -266,7 +266,7 @@ chmod 755 "$MODULE_DE"
 case $ENVIRONMENT in
     Magisk) magisk --install-module "$MODULE_DE" ;;
     APatch) /data/adb/apd module install "$MODULE_DE" ;;
-    KernelSU) /data/adb/ksud module install "$MODULE_DE" ;;
+    KernelSU | SukiSU) /data/adb/ksud module install "$MODULE_DE" ;;
 esac
 }
 
@@ -895,9 +895,9 @@ clear
 	elif [[ $ENVIRONMENT = "KernelSU" ]]; then
 		MANAGER="$YE检测到你已root
 你的root管理器为KernelSU("$KSU_VERSION")$RE"
-    elif [[ $ENVIRONMENT = "SukiSU Ultra" ]]; then
+    elif [[ $ENVIRONMENT = "SukiSU" ]]; then
 		MANAGER="$YE检测到你已root
-你的root管理器为SukiSU Ultra(v"$KSU_VERSION")$RE"    
+你的root管理器为SukiSU(v"$KSU_VERSION")$RE"    
     elif [[ $ENVIRONMENT = "APatch" ]]; then
     APATCH_NEXT_VERSIONS="11008 11010 11021"
         if echos " $APATCH_NEXT_VERSIONS " | grep -q " $APATCH_VERSION "; then
