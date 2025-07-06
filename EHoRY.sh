@@ -459,11 +459,21 @@ chmod -R 755 /data/yshell/
 clear
 }
 
+reznbin() {
+ZVC="$(sed -n '4p' /data/adb/modules/zygisksu/module.prop | cut -d = -f2 2>/dev/null)"
+if [[ $ZVC -ge 512 ]]; then
+    znbin="/data/adb/modules/zygisksu/bin/zygiskd"
+else
+    znbin="znctl"
+fi
+}
+
 zynlist() {
 enableznctl() {
-znctl enforce-denylist enabled
+reznbin
+$znbin enforce-denylist enabled
 [[ $ENVIRONMENT = "Magisk" ]] && magisk denylist add me.garfieldhan.holmes
-znctl enforce-denylist disabled   
+$znbin enforce-denylist disabled   
 }
 [[ ! -d /data/adb/modules/zygisksu ]] && echo "$YE此方法依赖zygisk next模块，请去安装模块后再来执行$RE" && ends && return
 if [[ -f /data/adb/zygisksu/denylist_enforce ]]; then
@@ -483,8 +493,8 @@ fi
 
 if [[ -d /data/adb/modules/zygisksu ]]; then
     echos "                                        "
-    ZNVERSION="$(sed -n '4p' /data/adb/modules/zygisksu/module.prop 2>/dev/null)"
-	if [[ $ZNVERSION = "versionCode=512" ]]; then
+    ZVC="$(sed -n '4p' /data/adb/modules/zygisksu/module.prop | cut -d = -f2 2>/dev/null)"
+    if [[ $ZVC -ge 512 ]]; then
 	    zynlist
 	else
         echos "$YE你的Zygisk Next模块不是最新$RE"
@@ -549,7 +559,7 @@ fi
 cleanlsplog() {
 rm -f /data/adb/lspd/log/*
 rm -f /data/adb/lspd/log.old/*
-if [[ $ENVIRONMENT = "KernelSU" ]]; then
+if [[ $ENVIRONMENT = "KernelSU" ]] || [[ $ENVIRONMENT = "SukiSU" ]]; then
     /data/adb/ksu/bin/resetprop -n persist.logd.size ""
     /data/adb/ksu/bin/resetprop -n persist.logd.size.crash ""
     /data/adb/ksu/bin/resetprop -n persist.logd.size.main ""
@@ -795,7 +805,7 @@ niutous=(
         2) 
         clear; echos "$GR正在解决哈希值问题$RE"; haxiz; downout ;;
         3) 
-        clear; echos "$GR正在解决Futile Hide (01)$RE"; znctl enforce-denylist disabled; examm ;;
+        clear; echos "$GR正在解决Futile Hide (01)$RE"; reznbin; znctl enforce-denylist disabled; examm ;;
         4)
         clear; echos "$GR正在解决Futile Hide (8)$RE"; fheight; downout ;;
         *) 
@@ -1423,8 +1433,15 @@ yuhide() {
     echos "$YE正在下载必要文件中$RE"
     mod=1 & CDNUM=1
     speedforcheck
-      
-    cdn_url="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/ARMIAS.zip"
+
+    if [[ $Kistune == 1 ]]; then
+        cdn_url="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/Kistune.zip"
+    elif [[ $ENVIRONMENT == "APatch" ]]; then
+        cdn_url="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/APatch.zip"
+    else
+        cdn_url="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/ARMIAS.zip"
+    fi
+
     down_cdn   
      
     BOOTHASH="$(getprop ro.boot.vbmeta.digest 2>/dev/null)"

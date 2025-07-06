@@ -25,15 +25,13 @@ A comprehensive tool to hide root status and bypass detection on Android devices
    ```bash
    curl -LJO https://raw.githubusercontent.com/yu13140/EHoRY/main/EHoRY.sh
    ```
-2. **赋予权限**  
-   ```bash
-   chmod 777 EHoRY.sh
-   ```
-3. **以Root权限运行**  
+2. **以Root权限运行**  
    ```bash
    su
    bash EHoRY.sh
    ```
+   
+注意：如果脚本执行不成功，请寻找下载好的脚本手动执行它
 
 ## 注意事项
 1. **备份数据**: 操作前建议备份重要数据。

@@ -23,14 +23,14 @@ A comprehensive tool to hide root status and bypass detection on Android devices
    ```bash
    curl -LJO https://raw.githubusercontent.com/yu13140/EHoRY/main/EHoRY.sh
    ```
-2. **Grant Permissions**  
+
+2. **Run as Root**  
    ```bash
-   chmod +x EHoRY.sh
+   su
+   bash EHoRY.sh
    ```
-3. **Run as Root**  
-   ```bash
-   su -c ./EHoRY.sh
-   ```
+
+Note: If the script does not execute successfully, look for a downloaded script to execute it manually.
 
 ## Warnings
 1. **Backup Data**: Always backup before operation.
