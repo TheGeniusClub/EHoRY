@@ -8,9 +8,9 @@
 [![](https://img.shields.io/badge/Update_Log-v5.0-orange?style=for-the-badge)](update_log.md)  
 
 > [!IMPORTANT]
-> The current branch is built using Rust
-> The old version is built using pure Shell
-> For details, please refer to [old branch](https://github.com/yu13140/EHoRY/tree/old)
+> The current branch is built using Rust  
+> The old version is built using pure Shell  
+> For details, please refer to [old branch](https://github.com/yu13140/EHoRY/tree/old)  
 
 ## Features
 - **Multi-Environment Support**: Compatible with Magisk, KernelSU, APatch.
@@ -35,10 +35,10 @@
    bash EHoRY.sh
    ```
 > [!WARNING]
-> Always backup before operation.
-> Ensure device can enter Recovery mode.
-> If the script does not execute successfully, look for a downloaded script to execute it manually.
-> At present, the output of the script is only Chinese. I welcome you to add your own language to the script.
+> Always backup before operation.  
+> Ensure device can enter Recovery mode.  
+> If the script does not execute successfully, look for a downloaded script to execute it manually.  
+> At present, the output of the script is only Chinese. I welcome you to add your own language to the script.  
 
 ---
 
@@ -53,8 +53,9 @@ For details, see
 - Issues: [GitHub Issues](https://github.com/yu13140/EHoRY/issues)
 
 ## Thanks
-> Service [VerifiedBootHash](https://github.com/yu13140/VerifiedBootHash) Source of code:
-> [vvb2060/KeyAttestation](https://github.com/vvb2060/KeyAttestation) | [Xtrlumen/GetVBHash](https://github.com/XtrLumen/GetVBHash)
+> Service [VerifiedBootHash](https://github.com/yu13140/VerifiedBootHash) Source of code:  
+> [vvb2060/KeyAttestation](https://github.com/vvb2060/KeyAttestation)  
+> [Xtrlumen/GetVBHash](https://github.com/XtrLumen/GetVBHash)  
 
 - [5ec1cff/cmd-wrapper](https://gist.github.com/5ec1cff/4b3a3ef329094e1427e2397cfa2435ff) - Eliminate obstacles in the execution environment  
 - [JonForShort/Android tools](https://github.com/JonForShort/android-tools) - Provide aapt tool for Android platform

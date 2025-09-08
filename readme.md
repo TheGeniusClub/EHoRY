@@ -1,6 +1,6 @@
 # EHoRY
 
-###### 一个用于隐藏Android设备Root状态和绕过检测的综合脚本工具。
+##### 一个用于隐藏Android设备Root状态和绕过检测的综合脚本工具。
 
 [简体中文](readme.md) | [English](readme_en.md)
 
@@ -8,9 +8,9 @@
 [![](https://img.shields.io/badge/Update_Log-v5.0-orange?style=for-the-badge)](update_log.md)  
 
 > [!IMPORTANT]
-> 当前分支为使用Rust构建的分支
-> 旧版本使用纯Shell构建
-> 详情请见：[old branch](https://github.com/yu13140/EHoRY/tree/old)
+> 当前分支为使用Rust构建的分支  
+> 旧版本使用纯Shell构建  
+> 详情请见：[old branch](https://github.com/yu13140/EHoRY/tree/oldv)  
 
 ## 功能特性
 - **多环境支持**: 兼容Magisk、KernelSU、APatch等Root方案。
@@ -35,10 +35,10 @@
    sh EHoRY.sh
    ```
 > [!WARNING]
-> 操作前建议备份重要数据。
-> 部分功能涉及分区修改，需确保设备可进入Recovery模式。
-> 模块下载依赖GitHub，若连接失败请使用代理。
-> 如果脚本不能成功执行，请寻找设备内下载好的脚本手动执行它。
+> 操作前建议备份重要数据。  
+> 部分功能涉及分区修改，需确保设备可进入Recovery模式。  
+> 模块下载依赖GitHub，若连接失败请使用代理。  
+> 如果脚本不能成功执行，请寻找设备内下载好的脚本手动执行它。   
 
 ---
 
@@ -53,8 +53,9 @@
 - 反馈: [GitHub Issues](https://github.com/yu13140/EHoRY/issues)
 
 ## 鸣谢
->服务[VerifiedBootHash](https://github.com/yu13140/VerifiedBootHash)的代码来源：
->[vvb2060/KeyAttestation](https://github.com/vvb2060/KeyAttestation) | [Xtrlumen/GetVBHash](https://github.com/XtrLumen/GetVBHash)
+>服务[VerifiedBootHash](https://github.com/yu13140/VerifiedBootHash)的代码来源：  
+>[vvb2060/KeyAttestation](https://github.com/vvb2060/KeyAttestation)  
+>[Xtrlumen/GetVBHash](https://github.com/XtrLumen/GetVBHash)  
 
 - [5ec1cff/cmd-wrapper](https://gist.github.com/5ec1cff/4b3a3ef329094e1427e2397cfa2435ff) - 扫平执行环境障碍
 - [JonForShort/android-tools](https://github.com/JonForShort/android-tools) - 提供安卓平台的aapt工具
