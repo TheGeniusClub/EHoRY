@@ -174,9 +174,10 @@
 6.删除从Github下载文件进行云更新的逻辑  
 7.全自动配置隐藏应用列表(包括改包名版)  
 8.全自动配置verifiedboothash值  
-9.Magisk：检查是否开启了内置zygisk  
-10.加快了模块的下载速度  
-11.优化对错误输出的处理  
-12.修复了Native Test：Futile Hide (01)的错误  
-13.Hunter：Find prop Modify Mark  
-14.Luna：证书 系统安全性被破坏  
+9.全自动配置susfs路径  
+10.Magisk：检查是否开启了内置zygisk  
+11.加快了模块的下载速度  
+12.优化对错误输出的处理  
+13.修复了Native Test：Futile Hide (01)的错误  
+14.Hunter：Find prop Modify Mark  
+15.Luna：证书 系统安全性被破坏  
