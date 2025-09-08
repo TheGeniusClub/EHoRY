@@ -26,8 +26,8 @@
 
 ## 使用方法
 1. **下载脚本**  
-   [DownLoad](https://github.com/yu13140/EHoRY/releases/tag/v5.0)
-   ```
+  [![](https://img.shields.io/badge/Release-v5.0-purple?style=for-the-badge&logo=Github)](https://github.com/yu13140/EHoRY/releases/tag/v5.0)
+
 2. **以Root权限运行**
    ```bash
    su
