@@ -70,10 +70,10 @@ fi
 if [[ $KERNELSU_FLAG -eq 1 ]]; then
     export ENVIRONMENT="KernelSU"
     BUSYBOX_PATH="/data/adb/ksu/bin/busybox"
-    KSU_VERSION="$(/data/adb/ksud -V | sed 's/ksud //g' | cut -d "-" -f1)"
-    if [[ $KSU_VERSION == "zako"* ]]; then
+    KSU_VERSION="$(/data/adb/ksud debug version | sed 's/Kernel Version: //g')"
+    KSU_V="$(/data/adb/ksud -V | sed 's/ksud //g' | cut -d "-" -f1)"
+    if [[ $KSU_V == "zako"* ]]; then
         export ENVIRONMENT="SukiSU"
-        KSU_VERSION="$(/data/adb/ksud -V | sed 's/zakozako //g' | cut -d "-" -f1)"    
     fi
     BUSY="/data/adb/ksu/bin/busybox"
 elif [[ $APATCH_FLAG -eq 1 ]]; then
@@ -573,10 +573,10 @@ clear
         fi
 	elif [[ $ENVIRONMENT = "KernelSU" ]]; then
 		MANAGER="$YE检测到你已root
-你的root管理器为KernelSU(v"$KSU_VERSION")$RE"
+你的root管理器为KernelSU("$KSU_VERSION")$RE"
     elif [[ $ENVIRONMENT = "SukiSU" ]]; then
 		MANAGER="$YE检测到你已root
-你的root管理器为SukiSU(v"$KSU_VERSION")$RE"
+你的root管理器为SukiSU("$KSU_VERSION")$RE"
     elif [[ $ENVIRONMENT = "APatch" ]]; then
     APATCH_NEXT_VERSIONS="11008 11010 11021"
         if echos " $APATCH_NEXT_VERSIONS " | grep -q " $APATCH_VERSION "; then
@@ -626,7 +626,9 @@ MENU=(
         " "
         "6.安装当前设备上的指定模块"
         " "
-        "7.(实验)切换Root方案"
+        "7.一键配置sus路径"
+        " "
+        "8.(实验)切换Root方案"
         " $RE"
     )
     
@@ -734,6 +736,17 @@ IMODULELIST=(
     fi	      
 }
 
+suspath() {
+[[ ! -d /data/adb/susfs4ksu ]] && echos "$YE未找到susfs路径$RE" && return 1 && ends
+echos "$GR你正在使用 一键配置sus路径 功能"
+echos "感谢酷安@幽影WF的一键配置sus路径脚本"
+echos "正在下载必要文件……$RE"
+MODULE_DE="$YSHELL_PATH/Script.sh"
+downloader "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/Script.sh" "f519c867b8a8bc0611a345033c58ddc80ec4271b233cbfb0dde725310c49d6b6"
+sh $MODULE_DE
+MODULE_DE="$YSHELL_PATH/installmodule.zip"
+}
+
 switchroot() {
 ddQualcomm() {
 platform=$(getprop ro.board.platform 2>/dev/null)
@@ -767,6 +780,7 @@ echos "此功能的实现都在模块内完成"
 echos "感谢酷安@Aurora星空_Z的AMMF框架！"
 echos "正在下载必要文件……$RE"
 downloader "https://github.com/yu13140/RootSwitcher/releases/download/v2.3.0_development/RootSwitcher_v2.3.0_development.zip" "04d23e833db2aa2dde7c37234491230baf6812cc0a6e33cd04799a61806fbd6e"
+installer
 }
 
 awarmlist() {
@@ -1068,6 +1082,8 @@ case $1 in
     6)
     clear; extramodule ;;
     7)
+    clear; suspath ;;    
+    8)
     clear; switchroot ;;    
     f) 
     echos "$GR正在退出脚本$RE"; exit 0 ;;
