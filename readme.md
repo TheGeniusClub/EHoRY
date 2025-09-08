@@ -26,8 +26,7 @@
 
 ## 使用方法
 1. **下载脚本**  
-   ```bash
-   curl -LJO https://raw.githubusercontent.com/yu13140/EHoRY/main/EHoRY.sh
+   [DownLoad](https://github.com/yu13140/EHoRY/releases/tag/v5.0)
    ```
 2. **以Root权限运行**
    ```bash

@@ -24,10 +24,8 @@
 - Terminal: MT Manager, etc. (Termux❌)
 
 ## Usage
-1. **Download Script**  
-   ```bash
-   curl -LJO https://raw.githubusercontent.com/yu13140/EHoRY/main/EHoRY.sh
-   ```
+1. **Download Script**     
+   [DownLoad](https://github.com/yu13140/EHoRY/releases/tag/v5.0)
 
 2. **Run as Root**  
    ```bash
