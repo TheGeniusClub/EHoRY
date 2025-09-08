@@ -1,7 +1,8 @@
 #!/bin/sh
 #################################################################################################################################
-#Create By yu13140,
-YUSHELLVERSION="开源版本v2"
+# Create By yu13140 [whmyc801@gmail.com],
+SCRIPT_VERSION="v5.0"
+PATCH_VERSION="FakeLove"
 
 # 颜色定义
 RED='\033[1;31m'
@@ -9,304 +10,135 @@ GR='\033[1;32m'
 YE='\033[1;33m'
 RE='\033[0m'
 WH='\033[1;37m'
+BLUE='\033[1;34m'
+WA="${BLUE}*${GR}"
 
-waitingstart() { 
-    if [[ ! "$(whoami)" = "root" ]]; then
-        echo "当前脚本的所有者为: $(whoami)"
-        echo "- 本脚本未获得 Root 权限，请授权"
-        exit 1
-    fi
-    
-    TMP_DIR="/data/local/tmp/yshell"  
-    rm -rf "${TMP_DIR}"
-    yudir="$(dirname $0)"
+# 变量区
+YSHELL_PATH="/data/cache/recovery/yshell"
+MODULE_DE="$YSHELL_PATH/installmodule.zip"
 
-    if [[ ! -d "${TMP_DIR}" ]]; then
-        mkdir -p "${TMP_DIR}"
-    fi
-    
-    if [[ $yudir != $TMP_DIR ]]; then
-        cp -af $0 $TMP_DIR/start.sh
-        chmod -R 777 $TMP_DIR      
-        exec sh $TMP_DIR/start.sh
-    fi    
-}
-
-detect_environment() {    
+# 检测当前环境 (注意，这样的检测是不完全正确的)
+detect_environment() {
 ENVIRONMENT=""
 KERNELSU_FLAG=0
 APATCH_FLAG=0
 MAGISK_FLAG=0
 
-[[ -d "/data/adb/ksu" ]] && [[ -f "/data/adb/ksud" ]] && KERNELSU_FLAG=1
-[[ -d "/data/adb/ap" ]] && [[ -f "/data/adb/apd" ]] && APATCH_FLAG=1
-[[ -d "/data/adb/magisk" ]] && [[ -f "/data/adb/magisk.db" ]] && MAGISK_FLAG=1
+[[ -d "/data/adb/ksu" ]] || [[ -f "/data/adb/ksud" ]] && KERNELSU_FLAG=1
+[[ -d "/data/adb/ap" ]] || [[ -f "/data/adb/apd" ]] && APATCH_FLAG=1
+[[ -d "/data/adb/magisk" ]] || [[ -f "/data/adb/magisk.db" ]] && MAGISK_FLAG=1
 
 ENV_COUNT=$(( KERNELSU_FLAG + APATCH_FLAG + MAGISK_FLAG ))
 
 if [[ $ENV_COUNT -gt 1 ]]; then
-    echos "$WH  "   
-    echos "- 错误：检测到多环境共存！"
-    echos "- 我猜你的adb没有清理干净"  
-    if [[ $KERNELSU_FLAG -eq 1 ]] && [[ $APATCH_FLAG -eq 1 ]]; then
-        echos "- 逆天环境：检测到了KSU和APatch共存"
-    elif [[ $KERNELSU_FLAG -eq 1 ]] && [[ $MAGISK_FLAG -eq 1 ]]; then
-        echos "- 逆天环境：检测到了KSU和Magisk共存"
-    elif [[ $MAGISK_FLAG -eq 1 ]] && [[ $APATCH_FLAG -eq 1 ]]; then
-        echos "- 逆天环境：检测到了Magisk和APatch共存"
-    else
+    echos "$WH  "
+    KERNELSUTAG=0
+    APATCHTAG=0
+    MAGISKTAG=0
+    DMESGLOG="$YSHELL_PATH/dmesg.log"
+    dmesg > "$DMESGLOG"
+    grep -q -F "KP I commit_common_su" "$DMESGLOG" && APATCHTAG=1
+    command -v magisk && MAGISKTAG=1
+    grep -q -F "KernelSU" "$DMESGLOG" && KERNELSUTAG=1
+    COUNT=$(( KERNELSUTAG + APATCHTAG + MAGISKTAG ))
+    if [[ $COUNT -eq 3 ]]; then
         echos "- 究极逆天环境：检测到了Magisk和KSU和APatch在你的设备上"
-    fi           
-    echos "- 请确保设备上只安装一个Root方案$RE"          
-    exit 1
+        exit 1
+    eles
+        if [[ $KERNELSU_FLAG -eq 1 ]] && [[ $APATCH_FLAG -eq 1 ]]; then
+            [[ $COUNT -eq 2 ]] && echos "- 逆天环境：检测到了KSU和APatch共存" && exit 1 || {
+                echos "经过综合判断，未存在Root共存问题，但是存在一些残留文件，正在为您清理"
+                [[ $KERNELSUTAG -eq 1 ]] && rm -rf /data/adb/ap /data/adb/apd
+                [[ $APATCHTAG -eq 1 ]] && rm -rf /data/adb/ksu /data/adb/ksud
+            }
+        elif [[ $KERNELSU_FLAG -eq 1 ]] && [[ $MAGISK_FLAG -eq 1 ]]; then
+            [[ $COUNT -eq 2 ]] && echos "- 逆天环境：检测到了KSU和Magisk共存" && exit 1 || {
+                echos "经过综合判断，未存在Root共存问题，但是存在一些残留文件，正在为您清理"
+                [[ $KERNELSUTAG -eq 1 ]] && rm -rf /data/adb/magisk /data/adb/magisk.db
+                [[ $MAGISKTAG -eq 1 ]] && rm -rf /data/adb/ksu /data/adb/ksud
+            }
+        elif [[ $MAGISK_FLAG -eq 1 ]] && [[ $APATCH_FLAG -eq 1 ]]; then
+            [[ $COUNT -eq 2 ]] && echos "- 逆天环境：检测到了Magisk和APatch共存" && exit 1 || {
+                echos "经过综合判断，未存在Root共存问题，但是存在一些残留文件，正在为您清理"
+                [[ $APATCHTAG -eq 1 ]] && rm -rf /data/adb/magisk /data/adb/magisk.db
+                [[ $MAGISKTAG -eq 1 ]] && rm -rf /data/adb/ap /data/adb/apd
+            }
+        fi
+    fi
 fi
 
 if [[ $KERNELSU_FLAG -eq 1 ]]; then
-    ENVIRONMENT="KernelSU"    
+    export ENVIRONMENT="KernelSU"
+    BUSYBOX_PATH="/data/adb/ksu/bin/busybox"
     KSU_VERSION="$(/data/adb/ksud -V | sed 's/ksud //g' | cut -d "-" -f1)"
     if [[ $KSU_VERSION == "zako"* ]]; then
-        ENVIRONMENT="SukiSU"
-        KSU_VERSION="$(/data/adb/ksud -V | sed 's/zakozako //g' | cut -d "-" -f1)"
-    else
-        KSU_APP_VER="$(dumpsys package me.weishu.kernelsu | grep versionCode | sed 's/^.*versionCode=//g' | sed 's/minSdk.*$//g')"
+        export ENVIRONMENT="SukiSU"
+        KSU_VERSION="$(/data/adb/ksud -V | sed 's/zakozako //g' | cut -d "-" -f1)"    
     fi
     BUSY="/data/adb/ksu/bin/busybox"
 elif [[ $APATCH_FLAG -eq 1 ]]; then
-    ENVIRONMENT="APatch"   
-    BUSY="/data/adb/ap/bin/busybox" 
+    export ENVIRONMENT="APatch"   
+    BUSYBOX_PATH="/data/adb/ap/bin/busybox"
     APATCH_VERSION="$(sed -n '1p' /data/adb/ap/version 2>/dev/null)"
 
 elif [[ $MAGISK_FLAG -eq 1 ]]; then
-    ENVIRONMENT="Magisk"
-    BUSY="/data/adb/magisk/busybox"
+    export ENVIRONMENT="Magisk"
+    BUSYBOX_PATH="/data/adb/magisk/busybox"
     MAGISK_VERSION="$(magisk -V 2>/dev/null)"
-    MAGISK_F="$(magisk -v 2>/dev/null)"  
+    MAGISK_FORK="$(magisk -v 2>/dev/null)"  
 fi
 
 [[ -z "$ENVIRONMENT" ]] && echos "$WH- 警告：未检测到Root环境$RE" >&2
 }
 
+# 简化调用Cli时的命令
 downloader() {
-if [[ $SHELL == *mt* ]]; then
-    DOWN1="curl --progress-bar -LJ"
-    DOWN2="-o "$MODULE_DE""
-else        
-    DOWN1="$BUSYBOX_PATH --progress-bar -LJ"
-    DOWN2="-o "$MODULE_DE""     
-fi
-}
-
-warmtocdn() {
-if [[ $WARM_CDN = "true" ]] 2>/dev/null; then
-    echos "$YE检测到逆天的网络波动，请连接正常的网络后再使用$RE"
-    exit 1
+ip addr | grep -qE 'tun[0-9]|ppp[0-9]'
+if [[ $? -ne 0 ]]; then
+    echos "$YE检测到VPN可能已被开启，不使用CDN进行加速。$RE"
+    rshy --download "$1" "$MODULE_DE" "$2" --no-cdn
 else
-    return
+    rshy --download "$1" "$MODULE_DE" "$2"
 fi
 }
+download_module() { rshy --download "$1" "$MODULE_DE" "$2" --no-cdn ; }
+pmx() { rhsy --tools cmd package $1 $2 ; }
 
-speedforcheck() {
-SPEED1="" && SPEED2="" && SPEED3="" && SPEED4="" && SPEED5="" && SPEED6=""
-echos "$GR正在为您测试网速，选择一个最佳线路(这可能需要30秒)$RE"
-speedcheck_url="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/check.sh"
-expected_size=99461
-CDNUM=1
-total=6  # 总测试数
-
-# 初始化进度条
-printf "${GR}[%-${total}s] 0/${total}${RE}" "" | tr ' ' '.'  # 用点表示未完成
-
-while [[ $CDNUM -le $total ]]; do
-    cdncheck
-    target_url=${CDN}${speedcheck_url}    
-    curl_output=$(curl -L -o /dev/null -sSf --connect-timeout 5 -m 20 -w "%{time_total} %{http_code} %{size_download}" "$target_url" 2>/dev/null)      
-    check_time=$(echo "$curl_output" | awk '{print $1}')
-    http_code=$(echo "$curl_output" | awk '{print $2}')
-    actual_size=$(echo "$curl_output" | awk '{print $3}')
-
-    if [[ $? -eq 0 ]] && [[ "$http_code" -eq 200 ]] && [[ "$actual_size" -eq "$expected_size" ]]; then
-      eval "SPEED$CDNUM=$check_time"
-    else
-      eval "SPEED$CDNUM='INVALID'"
-    fi
-
-    # 更新进度条
-    bar=$(printf "%${CDNUM}s" | tr ' ' '#')  # 已完成用#
-    remain=$((total - CDNUM))
-    dots=$(printf "%${remain}s" | tr ' ' '.')  # 未完成用.
-    printf "\r${GR}[%s%s] %d/${total}${RE}" "$bar" "$dots" "$CDNUM"
-    
-    CDNUM=$((CDNUM+1))
-done
-printf "\n"
-
-fastest_time=999
-fastest_num=0
-CDNUM=1
-while [[ $CDNUM -le 6 ]]; do
-    eval "current=\$SPEED$CDNUM"
-      
-    if [[ "$current" != "INVALID" ]] && \
-       [[ $(echo "$current < $fastest_time" | bc) -eq 1 ]]; then
-      fastest_time=$current
-      fastest_num=$CDNUM
-    fi
-    
-    CDNUM=$((CDNUM+1))
-done
-
-if [[ $fastest_num -ne 0 ]]; then
-    CDNUM=$fastest_num
-    echos "$GR为您测试了所有CDN服务，选择了其中最快的，延时为${fastest_time}s$RE"
-else
-    echos "$YE错误：未检测到有用的CDN服务，即将从线路一开始下载$RE"
-    CDNUM=1
-fi
-
-return
-}
-
-cdncheck() {
-case $CDNUM in
-    5)
-    CDN="https://github.moeyy.xyz/" ;;
-    6)
-    CDN="https://ghproxy.click/" ;;        
-    1)
-    CDN="https://ghfile.geekertao.top/" ;;
-    2)
-    CDN="https://ghf.xn--eqrr82bzpe.top/" ;;
-    3)
-    CDN="https://ghproxy.net/" ;;
-    4)
-    CDN="https://gh.llkk.cc/" ;;
-    7)
-    CDN="" ;;
-    *)
-    WARM_CDN="true"
-esac
-}
-
-down_cdn() {
-module_install() {
-if [[ $deletemodule = "true" ]]; then
-    rm -rf /data/adb/modules/*
-    rm -rf /data/adb/lspd/
-    rm -rf /data/adb/modules_update/
-fi
-echos " "                                       
-echos "$YE正在为您安装模块$RE"
-installer
-unset -v THISHA && unset -v cdn_url
-rm -f "$MODULE_DE" && mod=0
-}
-warmtocdn
-cdncheck
-THISHA="$1"
-MOD_URL="${CDN}$cdn_url"
-sizer
-$DOWN1 $MOD_URL $DOWN2
-while [[ $? -ne 0 ]]; do
-    if [[ $fastest_num -ne 0 ]]; then
-        echos "$YE检测到最快线路失败，请您选择是否连接VPN下载"
-        echos "1.回退到线路一      2.连接VPN下载(需要自己动手)$RE"
-        case $CDNUM in
-        1)
-        CDNUM=1 ;;
-        2)
-        CDNUM=7 ;;        
-        3)
-        echos "$YE输入错误，默认选择回退到线路一$RE"; CDNUM=1 ;;
-        esac
-        fastest_num=0 
-    else
-        echos "$YE检测到下载失败，正在为您切换下载线路$RE"
-        CDNUM=$(($CDNUM+1))
-    fi        
-    down_cdn "$1"
-done
-integritycheck
-sleep 0.1
-[[ "$MODULE_DE" = "$YSHELL_PATH/installmodule.zip" ]] || MODULE_DE="$YSHELL_PATH/installmodule.zip"
-[[ $mod = 1 ]] && module_install || return
-}
-
-sizer() {
-FILE_SIZE="$(curl --max-time 10 -sLI $MOD_URL 2>/dev/null | awk '/^[Cc][Oo][Nn][Tt][Ee][Nn][Tt]-[Ll][Ee][Nn][Gg][Tt][Hh]/ { bytes = $2; kb = bytes / 1024; if (kb < 1024) printf "%.2f KB\n", kb; else printf "%.2f MB\n", kb / 1024 }')"
-echos "$WH本次下载的文件大小：$FILE_SIZE$RE"
-}
-
-integritycheck() {
-if [[ ! -f $MODULE_DE ]]; then
-    echos "$YE未检测到模块，请确认是否下载完毕$RE"
-    exit 1
-fi
-SHACHECK="$(sha256sum "$MODULE_DE" | cut -d " " -f1)"
-    if [[ "$SHACHECK" = "$THISHA" ]] 2>/dev/null; then
-        echos "${GR}sha256完整性校验通过$RE"
-    else
-        echos "${YE}sha256完整性校验未通过$RE"
-        echos "${YE}请检查模块是否已经下载100%$RE"
-        echos "${YE}如果未发现其他问题，请私信@yu13140报告此错误$RE"
+detect_magisk() {
+if [[ $ENVIRONMENT = "Magisk" ]]; then
+    if [[ $(rshy --zygiskcheck) = 1 ]]; then
+        echos "$YE检测到您开启了magisk自带的zygisk"
+        echos "建议您关闭它以获得最佳的隐藏状态$RE"
         exit 1
     fi
+fi
 }
 
-#变量区
-BUSYBOX_PATH="/data/yshell/busybox"
-YSHELL_PATH="/data/local/tmp/yshell"
-DEVELOP="$(settings get global development_settings_enabled)"
-MODULE_DE="$YSHELL_PATH/installmodule.zip"
-file1="$YSHELL_PATH/config.json"
-backup_dir="/sdcard/一键解决隐藏问题/"
-backup_file="${backup_dir}/$(basename "$file2")"
-
+# 安装模块
 installer() {
+[[ $# -eq 1 ]] && MODULE_DE="$1"
 chmod 755 "$MODULE_DE"
 case $ENVIRONMENT in
     Magisk) magisk --install-module "$MODULE_DE" ;;
     APatch) /data/adb/apd module install "$MODULE_DE" ;;
     KernelSU | SukiSU) /data/adb/ksud module install "$MODULE_DE" ;;
 esac
+rm -f $MODULE_DE
+MODULE_DE="$YSHELL_PATH/installmodule.zip"
 }
 
+# 简化输出
 echos() { echo -e "$@"; }
 
+# 处理函数带来的的结果
 ends() {
-    while true; do
-        echos "$GR操作已完成$RE"
-        echos "                                        "
-        echos "----------------------------------------"
-        echos "$YE是否继续操作？"
-        echos "1. 返回主菜单"
-        echos "2. 返回上级菜单"
-        echos "3. 退出脚本$RE"
-        echos "----------------------------------------"
-        echos "$YE请输入选项：$RE\c"
-        read out
-        case $out in
-        1) 
-        clear; selmenu; break ;;
-        2) 
-        clear; menu; break ;;
-        3) 
-        echos "$YE正在退出脚本$RE"; exit 0 ;;
-        *) 
-        echos "$YE输入错误❌请输入1或2！"; echos "请等待2秒$RE" ;sleep 1.4; clear ;;
-        esac
-    done
-}
-
-downout() {
 if [[ $? -ne 0 ]]; then
     echos "$WH可能有问题出现咯，请截图下来私信酷安@yu13140$RE"
     exit 0
 else
     while true; do
-        echos "$GR模块安装完成$RE"
-        echos "                                        "
-        echos "$YE模块需要重启手机以生效$RE"
-        echos "                                        "
+        echos "$GR命令执行完成$RE"
+        echos " "
         echos "----------------------------------------"
         echos "$YE是否继续操作？"
         echos "1. 重启手机"
@@ -329,77 +161,7 @@ else
 fi
 }
 
-examm() { [[ $? -ne 0 ]] && echos "$WH可能有问题出现咯，请截图下来私信酷安@yu13140$RE" || ends ; }
-
-systemmount() {
-	echos "$GR正在生成模块$RE"
-	mkdir -p /data/adb/modules/Solve_systemmount 2>/dev/null
-	echos "id=Solve_systemmout
-name=解决数据未加密，挂载参数被修改问题
-version=test
-versionCode=1.0
-author=酷安@yu13140
-description=解决momo提示数据未加密，挂载参数被修改" >>/data/adb/modules/Solve_systemmount/module.prop
-	echos "ro.crypto.state=encrypted" >>/data/adb/modules/Solve_systemmount/system.prop
-	sleep 1.4	
-}
-
-topmiaohan() {
-	echos "                                        "
-	echos "                                        "
-	echos "- 本脚本制作于2024年09月17日"
-	echos "- 脚本作者:酷安用户 topmiaohan"
-	echos "- 脚本功能:生成一个可在每次开机时重置verifiedBoot哈希值的Magisk模块，并自动把这个模块刷入手机"
-	if [[ -d /data/adb/modules/tricky_store ]]; then
-		mkdir -p /data/adb/modules/Reset_BootHash
-		rm -f /data/adb/modules/Reset_BootHash/service.sh
-		rm -f /data/adb/modules/Reset_BootHash/module.prop
-		echos "id=Reset_BootHash
-name=重置哈希值
-version=搬运 @yu13140
-versionCode=20240917
-author=topmiaohan
-description=辅助Tricky Store，实现增强BL隐藏。" >>/data/adb/modules/Reset_BootHash/module.prop
-		echos "                                        "
-		echos "脚本正在生成模块...\033[0;32m完成\033[0m"
-		echos "脚本正在把生成的模块安装到手机...\033[0;32m完成\033[0m"
-		echos "                                        "
-		echos "接下来还有非常重要的一步，请按照以下步骤手动完成:"
-		echos "                                        "
-		echos "\033[0;33m请从密钥认证APP里获取你本人手机的verifiedBootHash值\033[0m"
-		echos "\033[0;33m然后粘贴到下边，按回车键确认!\033[0m"
-		echos "                                        "
-		echos "\033[0;33m请从密钥认证APP里获取你本人手机的verifiedBootHash值\033[0m"
-		echos "\033[0;33m然后粘贴到下边，按回车键确认!\033[0m"
-		echos "                                        "
-		echos "\033[0;33m请从密钥认证APP里获取你本人手机的verifiedBootHash值\033[0m"
-		echos "\033[0;33m然后粘贴到下边，按回车键确认!\033[0m"
-		echos "                                        "
-		read Name
-		if [[ -z "$Name" ]]; then
-			echos "$(echos "\033[0;33m未输入任何内容，脚本将不执行任何操作。\033[0m")"
-			rm -rf /data/adb/modules/Reset_BootHash/
-			exit 0
-		else
-			echos "resetprop -n ro.boot.vbmeta.digest $Name" >>/data/adb/modules/Reset_BootHash/service.sh
-			echos "把输入的verifiedBootHash值添加到模块...\033[0;32m完成\033[0m"
-		fi
-		echos "                                        "
-		echos "脚本执行完毕，请重启手机后查看牛头人应用！"
-		echos "脚本执行完毕，请重启手机后查看牛头人应用！"
-		echos "脚本执行完毕，请重启手机后查看牛头人应用！"
-	else
-		echos "                                        "
-		echos "  正在运行脚本...\033[0;31m失败\033[0m"
-		echos "  正在分析失败原因...\033[0;31m未安装TrickyStore模块！\033[0m"
-		echos "                                        "
-		echos "  正在下载Tricky Store模块"
-		echos "  安装完请重启手机后，再执行脚本"
-		downtricky
-		downout	
-	fi
-}
-
+# 音量键开关开发者模式
 Development() {
     Volume_key_monitoring(){
     local choose
@@ -415,8 +177,8 @@ Development() {
             break
         done
 }
-echos  "                                        "
-echos  "                                        "
+echos  " "
+echos  " "
 echos "$WH- 本脚本制作于2024年12月21日"
 echos "- 脚本作者:酷安用户 @yu13140"
 echos "- 脚本功能:让你更方便地开关开发者模式$RE"
@@ -435,300 +197,52 @@ else
 fi
 }
 
-solve_Development() {
-	echos "$GR正在生成模块$RE"
-	mkdir -p /data/adb/modules/Solve_Development
-	echos "id=Solve_Development
-name=解决处于调试环境问题
-version=test
-versionCode=1.0
-author=酷安@yu13140
-description=解决momo提示处于调试环境" >/data/adb/modules/Solve_Development/module.prop
-    echos "ro.debuggable=0" >/data/adb/modules/Solve_Development/system.prop
-	sleep 1.4	
-}
-
-downbusybox() {
-echos "$GR正在配置环境$RE"  
-mkdir -p /data/yshell
-CDNUM=1
-speedforcheck
-cdncheck
-$BUSY wget -nc --output-document="$BUSYBOX_PATH" ${CDN}https://github.com/yu13140/yuhideroot/raw/refs/heads/main/curl/busybox --no-check-certificate
-chmod -R 755 /data/yshell/
-clear
-}
-
-reznbin() {
-ZVC="$(sed -n '4p' /data/adb/modules/zygisksu/module.prop | cut -d = -f2 2>/dev/null)"
-if [[ $ZVC -ge 512 ]]; then
-    znbin="/data/adb/modules/zygisksu/bin/zygiskd"
-else
-    znbin="znctl"
-fi
-}
-
-zynlist() {
-enableznctl() {
-reznbin
-$znbin enforce-denylist enabled
-[[ $ENVIRONMENT = "Magisk" ]] && magisk denylist add me.garfieldhan.holmes
-$znbin enforce-denylist disabled   
-}
-[[ ! -d /data/adb/modules/zygisksu ]] && echo "$YE此方法依赖zygisk next模块，请去安装模块后再来执行$RE" && ends && return
-if [[ -f /data/adb/zygisksu/denylist_enforce ]]; then
-    ZNLIST="$(sed -n '1p' /data/adb/zygisksu/denylist_enforce 2>/dev/null)"
-	[[ $ZNLIST = 1 ]] && znctl enforce-denylist disabled || enableznctl   
-else
-    enableznctl
-fi
-}
-
-usezyn() {
-if [[ -d /data/adb/modules/zygisk-maphide ]]; then
-    echos "                                        "
-    echos "${YE}将要删除Zygisk Maphide模块(如果有的话)$RE"
-    rm -rf /data/adb/modules/zygisk-maphide/
-fi
-
-if [[ -d /data/adb/modules/zygisksu ]]; then
-    echos "                                        "
-    ZVC="$(sed -n '4p' /data/adb/modules/zygisksu/module.prop | cut -d = -f2 2>/dev/null)"
-    if [[ $ZVC -ge 512 ]]; then
-	    zynlist
-	else
-        echos "$YE你的Zygisk Next模块不是最新$RE"
-	    echos "$YE安装模块后重启，打开Holmes应用，如果仍有9ff请再执行一次脚本$RE"
-	    downzyn	
-    fi
-else
-    echos "${YE}安装模块后重启，打开Holmes应用，如果仍有9ff请再执行一次脚本$RE"
-    downzyn
-fi
-}
-
+# 关闭开发者模式
 momodevelop() {
         clear
 		echos "$GR正在关闭调试模式$RE"
-		settings put global adb_enabled 0
-		settings put global development_settings_enabled 0
+		rshy --tools cmd settings put global adb_enabled 0
+		rshy --tools cmd settings put global development_settings_enabled 0
 		if [[ "$DEVELOP" = 1 ]]; then
-			echos -e "$GR调试模式未关闭，红魔手机请不要使用此选项$RE"
-			echos -e "$GR其他手机请联系酷安@yu13140$RE"
+			echos "$GR调试模式未关闭，红魔设备请不要使用此选项$RE"
+			echos "$GR其他设备请联系酷安@yu13140$RE"
 		else
-		    sleep 1.4			
+		    sleep 1.4
 		fi
 }
 
-momosdk() {
-		echos "$GR正在解决 非SDK接口的限制失效 问题$RE"
-		settings delete global hidden_api_policy
-        settings delete global hidden_api_policy_p_apps
-        settings delete global hidden_api_policy_pre_p_apps
-        settings delete global hidden_api_blacklist_exemptions
-        settings delete global hidden_api_blacklist_exe
-		sleep 1.4
-}
-
-momotee() {
-if [[ -d /data/adb/modules/tricky_store ]]; then
-    pm list packages $flag | sed 's/package://g' > /data/adb/tricky_store/target.txt
-    sed -i '/^$/! s/$/!/' /data/adb/tricky_store/target.txt
-    echo "teeBroken=true" >/data/adb/tricky_store/tee_status
-else
-    echos "$YE你没有安装Tricky Store，请去安装所需模块$RE"
-    exit 0
+# 检查安装shamiko的环境
+download_shamiko() {
+if [[ $ENVIRONMENT = "APatch" ]]; then
+    echos "{$WH}APatch不需要Shamiko，跳过此步骤"
+    echos "2秒后将回到更新模块界面$RE"
+    sleep 1.4
+    gmodules
 fi
-}
 
-fhten() {
-path=$(pm list packages -f | grep icu.nullptr.nativetest | sed 's/package://' | awk -F'base' '{print $1}')
-		find $path -type f -name "*.*dex" -exec rm {} \;
-}
-
-fheight() {
-if [[ -d /data/adb/modules/playintegrityfix ]]; then
-    echos "$YE这是实验性功能，可能会不起作用。$RE"
-    touch /data/adb/modules/playintegrityfix/remove
-    echos "$YE重启后再试试效果吧！$RE"
-else
-    echos "$YE这个方案可能不适合你的设备，请向酷安@yu13140反馈情况$RE"
+if [[ $ENVIRONMENT = "Magisk" ]] && [[ $Kistune == 1 ]]; then
+    echos "$WH狐狸面具不需要Shamiko，跳过此步骤" 
+    echos "2秒后将回到更新模块界面$RE"
+    sleep 1.4
+    gmodules
 fi
-}
 
-cleanlsplog() {
-rm -f /data/adb/lspd/log/*
-rm -f /data/adb/lspd/log.old/*
-if [[ $ENVIRONMENT = "KernelSU" ]] || [[ $ENVIRONMENT = "SukiSU" ]]; then
-    /data/adb/ksu/bin/resetprop -n persist.logd.size ""
-    /data/adb/ksu/bin/resetprop -n persist.logd.size.crash ""
-    /data/adb/ksu/bin/resetprop -n persist.logd.size.main ""
-    /data/adb/ksu/bin/resetprop -n persist.logd.size.tag ""
-else
-    resetprop -n persist.logd.size ""
-    resetprop -n persist.logd.size.crash ""
-    resetprop -n persist.logd.size.main ""
-    resetprop -n persist.logd.size.tag ""
-fi
-}
+select_module "1"
 
-haxiz() {
-VERSIONCODE="$(cat /data/adb/modules/tricky_store/module.prop | grep "versionCode" | sed 's/versionCode=//g' 2>/dev/null)"
-		if [[ $VERSIONCODE -ge 180 ]]; then
-			echos "$GR正在运行topmiaohan创建的脚本$RE"
-			topmiaohan
-			sleep 1.4
-		else
-			NOWVERSION="$(sed -n '3p' /data/adb/modules/tricky_store/module.prop 2>/dev/null)"
-			echos "$GR当前设备上的trick-store版本为$RE"
-			echos "$YE$NOWVERSION$RE" | sed 's/version://'
-			echos "$GR你的trick-store版本不是最新，或你使用了修改版本
-    目前最高版本为$RE$YE v1.3.0 (180-8acfa57-release)$RE"
-            exit 1
-		fi
-}
-
-aptroot() {
-rm -f /data/local/tmp/*
-rm -f /data/swap_config.conf
-rm -rf /data/core /data/dumpsys /data/duraspeed
-sleep 1.4
-}
-
-ctsfix(){
-if [[ -f /data/adb/modules/playintegrityfix/pif.json ]]; then
-	FINGERPRINT="$(getprop ro.system.build.fingerprint)"
-	NOWFP="$(sed -n '2p' /data/adb/modules/playintegrityfix/pif.json 2> /dev/null)"
-    MODIFIED_FINGERPRINT="  \"FINGERPRINT\": \"$FINGERPRINT\","
-    sed -i "s|$NOWFP|$MODIFIED_FINGERPRINT|" /data/adb/modules/playintegrityfix/pif.json
-	sleep 1.4
-else
-	echos "$GR您未刷入playintegrityfix模块，请刷入此模块$RE"
-	exit 1
-fi
-}
-
-rurudelete() {
-echos "$GR这可能会导致你的XPrivacyLua或Xposed Edge模块不可用$RE"
-rm -rf /data/xedge /data/xlua /sdcard/TWRP
-sleep 1.4
-}
-
-detectorlsp() {		
-pathd=$(pm list packages -f | grep com.reveny.nativecheck | sed 's/package://' | awk -F'base' '{print $1}')
-		find $pathd -type f -name "*.odex" -exec rm {} \;
-}
-
-ndhideboot() {
-echos "$GR正在生成模块$RE"
-	mkdir -p /data/adb/modules/hide_vbmeta_error 2>/dev/null
-	vbmeta_size=$(( 5504 + (RANDOM % 14 + 1)*1024 ))	
-	echos "id=hide_vbmeta_error
-name=解决Boot状态异常问题
-version=test
-versionCode=2.0
-author=酷安@yu13140
-description=解决Native Detector提示检测到Boot状态异常问题" >>/data/adb/modules/hide_vbmeta_error/module.prop
-	echos "ro.boot.vbmeta.invalidate_on_error=yes" >/data/adb/modules/hide_vbmeta_error/system.prop
-	echos "ro.boot.vbmeta.hash_alg=sha256" >>/data/adb/modules/hide_vbmeta_error/system.prop
-	echos "ro.boot.vbmeta.size=$vbmeta_size" >>/data/adb/modules/hide_vbmeta_error/system.prop
-	echos "ro.boot.vbmeta.device_state=locked" >>/data/adb/modules/hide_vbmeta_error/system.prop
-	echos "ro.boot.vbmeta.avb_version=1.2" >>/data/adb/modules/hide_vbmeta_error/system.prop
-	BOOTHASH="$(getprop ro.boot.vbmeta.digest 2>/dev/null)"
-    three_party="$(printf '0%.0s' {1..64})"
-    if [[ ! $BOOTHASH = " " ]] || [[ ! $BOOTHASH = "$three_party" ]]; then
-        echos "ro.boot.vbmeta.digest=$BOOTHASH" >>/data/adb/modules/hide_vbmeta_error/system.prop
-    else
-        haxiz
-    fi
-	sleep 1.4
-}
-
-ndzygiskhide() {
-if [[ -d /data/adb/modules/zygisksu/ ]]; then
-    ZVC="$(sed -n '4p' /data/adb/modules/zygisksu/module.prop | cut -d = -f2 2>/dev/null)"
-    if [[ $ZVC -ge 512 ]]; then
-        touch /data/adb/zygisksu/no_mount_znctl
-        sleep 1.4
-    else
-        echos "$YE请去下载最新的Zygisk Next$RE"
-        exit 1
-    fi
-else
-    echos "$YE请去下载最新的Zygisk Next$RE"
-    exit 1
-fi
-}
-
-huntermiui() {				
-echos "$GR目前仅适用于米系手机(小米，红米)$RE"
-pm disable --user 0 com.miui.securitycenter/com.xiaomi.security.xsof.MiSafetyDetectService
-sleep 1.4
-}
-
-huntershizuku() {
-rm -rf /data/local/tmp/shizuku/
-rm -f /data/local/tmp/shizuku_starter
-sleep 1.4
-}
-
-somethingw() {
-sw1() { cmd package compile -m interpret-only -f $1 ; }
-sw2() { cmd package compile -m everything -f $1 ; }
-echos "$GR感谢酷安@but_you_forget提供的思路$RE"
-echos "$GR这可能需要一两分钟的时间，因机而异$RE"
-sop=$(sw1 "com.android.settings")
-if echo "$sop" | grep -iq "Failure"; then
-    echo "$YE❌ 执行出现错误！请私信作者报告错误$RE" && ends && return
-fi
-sw1 "me.garfieldhan.holmes"
-rm -f /data/dalvik-cache/arm/*
-rm -f /data/dalvik-cache/arm64/*
-sw2 "com.android.settings"
-sw2 "me.garfieldhan.holmes"
-echos "$YE如果你想从根本解决问题，请换更高版本的LSPosed$RE"
-sleep 1.4
-}
-
-lunawan() {
-rm -rf /storage/emulated/0/Android/data/com.byyoung.setting
-rm -rf /storage/emulated/0/Android/obb/com.byyoung.setting
-rm -rf /storage/emulated/0/Android/obb/com.byyoung.setting
-rm -rf /storage/emulated/0/Android/data/com.byyoung.setting
-sleep 1.4
-}
-
-nouses() {
-echos "$RED高危选项！操作需要删除system分区里的addon.d文件夹"	
-echos "删除这个文件夹，可能会使设备开机后不能写入system分区$RE"
-echos "$YE你确定要继续吗？(  1.继续    2.退出  )：\c$RE"
-read addonc
-if [[ $addonc = 2 ]]; then
-    echo "$WH你选择了退出$RE" && ends && return
-fi		
-echos "$GR正在生成模块$RE"
-mkdir -p /data/adb/modules/delete_addond	    
-mkdir -p /data/adb/modules/delete_addond/addon.d
-touch /data/adb/modules/delete_addond/addon.d/.replace
-echo "sleep 10 && rm -rf /data/adb/modules/delete_addond/" > /data/adb/modules/delete_addond/service.sh
-echos "id=sysaddons
-name=解决设备正在使用非原厂系统问题
-version=test
-versionCode=1.0
-author=酷安@yu13140
-description=解决momo提示设备正在使用非原厂系统" >/data/adb/modules/delete_addond/module.prop	
-sleep 1.4	
-}
-
-shamiko_modules() {
-echo " "    
-SHAMOD="/data/adb/shamiko/"
-if [[ -d $SHAMOD ]]; then
-    [[ -f $SHAMOD/whitelist ]] && rm -f $SHAMOD/whitelist && echos "${YE}Shamiko已设置黑名单模式$RE" || touch $SHAMOD/whitelist && echos "${YE}Shamiko已设置白名单模式$RE"
-else
-   echos "$YE你没有安装Shamiko！$RE"
-   exit 0
-fi
+    echos "$WH需要快速切换Shamiko模式的模块吗？$RE"
+    choice=("安装" "不安装")
+    echos "$YE "
+    PS3="请输入对应的数字："
+select shamiko_choice in "${choice[@]}"; do
+    case $shamiko_choice in
+    安装)
+    echos "$GR你选择了继续下载此模块$RE"; select_modules "19"; break ;;
+    不安装)
+    echos "$GR你选择了不用下载此模块$RE"; break ;;
+    *)
+    echos "$GR输入错误，请重新输入$RE" ;;
+    esac
+done
 }
 
 # 脚本操作选择
@@ -736,47 +250,55 @@ select_option() {
     case $1 in
     a)
     clear; selmenu ;;    
-    1) 
-    clear; echos "$GR正在切换Shamiko模式$RE"; shamiko_modules; examm ;;
-    2) 
-    clear; echos "$GR正在清理LSPosed日志$RE"; cleanlsplog; examm ;;
-    3) 
-    clear; echos "$GR正在清理Magisk日志$RE"; rm -f /cache/magisk.log; rm -f /cache/magisk.log.bak; examm ;;
-    4) 
-    clear; echos "$GR正在启动$RE"; Development; examm ;;
+    1)
+    clear; echos "$GR正在切换Shamiko模式$RE"; rshy shamiko_pattern; ends ;;
+    2)
+    clear; echos "$GR正在清理LSPosed日志$RE"; rshy lsplog; ends ;;
+    3)
+    clear; echos "$GR正在清理Magisk日志$RE"; rshy magisklog; ends ;;
+    4)
+    clear; echos "$GR正在启动$RE"; Development; ends ;;
     5)
     clear; Momo ;;
     6)
     clear; native_test ;;
-    7) 
-    clear; echos "$GR正在解决 Root|BootLoader|Magisk|Lsposed$RE"; aptroot; examm ;;
-    8) 
-    clear; echos "$GR正在匹配CTS配置文件$RE"; ctsfix; examm ;;
-    9) 
-    clear; echos "$GR正在解决Miscellaneous Check (a)$RE"; somethingw; examm ;;
-    10) 
-    clear; echos "$GR正在删除有问题的文件夹$RE"; rurudelete; examm ;;
-    11) 
-    clear; echos "$GR正在解决Detected LSPosed (5)$RE"; detectorlsp; examm ;;
-    12) 
-    clear; echos "$GR正在解决SafetyDetectClient Check Root/Unlock$RE"; huntermiui; examm ;;
-    13) 
-    clear; echos "$GR正在解决Find Risk File$RE"; huntershizuku; examm ;;
-    14) 
-    clear; echos "$GR正在解决Something Wrong$RE"; somethingw; examm ;;
-    15) 
-    clear; echos "$GR正在解决zygote注入问题$RE"; usezyn; downout ;;
-    16) 
-    clear; echos "$GR正在解决Bootloader锁问题$RE"; echos "com.zhenxi.hunter" >> /data/adb/tricky_store/target.txt; examm ;;
+    7)
+    clear; echos "$GR正在解决 Root|BootLoader|Magisk|Lsposed$RE"; rshy aptroot; ends ;;
+    8)
+    clear; echos "$GR正在匹配CTS配置文件$RE"; rshy ctsfix; ends ;;
+    9)
+    clear; echos "$GR正在删除有问题的文件夹$RE"; rshy rurudelete; ends ;;
+    10)
+    clear; echos "$GR正在解决SElinux Flag$RE"; downlockselinux; ends ;;
+    11)
+    clear; echos "$GR正在解决init.rc已被Magisk修改$RE"; rshy initrc; ends ;;
+    12)
+    clear; echos "$GR正在解决Miscellaneous Check (a)$RE"; rshy holmes somethingwrong; ends ;;
+    13)
+    clear; echos "$GR正在解决Something Wrong$RE"; rshy holmes somethingwrong; ends ;;
+    15)
+    clear; echos "$GR正在解决哈希值问题$RE"; rshy nativetest boothash; ends ;;
+    16)
+    clear; echos "$GR正在解决Miscellaneous Check (2)$RE"; rshy initrc; ends ;;
     17)
-    clear; echos "$GR正在检测到Boot状态异常问题$RE"; ndhideboot; downout ;;
+    clear; echos "$GR正在解决Detected LSPosed (5)$RE"; rshy nativedetector lsp5; ends ;;
     18)
-    clear; echos "$GR正在解决Magic Mount泄露$RE"; ndzygiskhide; examm ;;
+    clear; echos "$GR正在检测到Boot状态异常问题$RE"; rshy nativedetector vbmeta; installer; ends ;;
     19)
-    clear; echos "$GR正在解决爱玩机因权限泄露问题$RE"; lunawan; examm ;;
+    clear; echos "$GR正在解决Magic Mount泄露$RE"; rshy holmes magicmount; ends ;;
     20)
-    clear; echos "$GR正在解决哈希值问题$RE"; haxiz; downout ;; 
-    f) 
+    clear; echos "$GR正在解决SafetyDetectClient Check Root/Unlock$RE"; rshy hunter manager; ends ;;
+    21)
+    clear; echos "$GR正在解决Find Risk File$RE"; rshy hunter shizuku; ends ;;
+    22)
+    clear; echos "$GR正在解决Bootloader锁问题$RE"; rshy updatetarget; ends ;;
+    23)
+    clear; echos "$GR正在解决Selinux权限泄露问题$RE"; select_modules "16"; ends ;;    
+    24)
+    clear; echos "$GR正在解决权限泄露问题$RE"; rshy awjclean; ends ;;
+    25)
+    clear; echos "$GR正在解决哈希值问题$RE"; rshy nativetest boothash; installer; ends ;;
+    f)
     echos "$GR正在退出脚本$RE"; exit 0 ;;
     *) 
     echos "$YE输入错误，请重新选择$RE"; echos "$GR请等待2秒$RE"; sleep 1.4; menu ;;
@@ -789,7 +311,10 @@ niutous=(
         "1.Native Test：Futile Hide (10)(重启后可能失效)"
         "2.Native Test：Conventional Tests (8)+Partition Modified"    
         "3.Native Test：Futile Hide (01)"
-        "4.(实验)Native Test：Futile Hide (8)$RE"
+        "4.Native Test：Conventional Tests (1)"        
+        "5.Native Test：Evil Service (2)"
+        "6.Native Test：Found Injection (04)"
+        "7.${WA}Native Test：Futile Hide (8)$RE"
         )
         for nt in "${!niutous[@]}"; do
         echos "${niutous[$nt]}"
@@ -801,13 +326,19 @@ niutous=(
         a)
         clear; menu ;;
         1) 
-        clear; echos "$GR正在解决Futile Hide (10)$RE"; fhten; downout ;;
+        clear; echos "$GR正在解决Futile Hide (10)$RE"; rshy nativetest futile10; ends ;;
         2) 
-        clear; echos "$GR正在解决哈希值问题$RE"; haxiz; downout ;;
+        clear; echos "$GR正在解决哈希值问题$RE"; rshy nativetest boothash; installer; ends ;;
         3) 
-        clear; echos "$GR正在解决Futile Hide (01)$RE"; reznbin; znctl enforce-denylist disabled; examm ;;
-        4)
-        clear; echos "$GR正在解决Futile Hide (8)$RE"; fheight; downout ;;
+        clear; echos "$GR正在解决Futile Hide (01)$RE"; /data/adb/modules/zygisksu/bin/zygiskd enforce-denylist disabled; ends ;;
+        4) 
+        clear; echos "$GR正在解决Conventional Tests (1)$RE"; select_modules "11"; ends ;;
+        5) 
+        clear; echos "$GR正在解决Evil Service (2)$RE"; select_modules "8"; ends ;;
+        6) 
+        clear; echos "$GR正在解决Found Injection (04)$RE"; select_modules "2"; ends ;;
+        7)
+        clear; echos "$GR正在解决Futile Hide (8)$RE"; rshy --delete dir /data/adb/modules/playintegrityfix; select_modules "11"; ends ;;
         *) 
         echos "$GR输入错误，请重新输入$RE"; native_test ;;
         esac
@@ -817,11 +348,13 @@ Momo() {
 Momos=(
         "$YE- a.返回上一级$RE$GR"
         "1.Momo：已开启调试模式"
-        "2.Momo：处于调试环境"
-        "3.Momo：非SDK接口的限制失效"
-        "4.Momo：数据未加密，挂载参数被修改"
-        "5.Momo：设备正在使用非原厂系统"
-        "6.Momo：tee损坏$RE"       
+        "2.Momo：init.rc被修改"
+        "3.Momo：处于调试环境"
+        "4.Momo：ART参数异常/SElinux处于宽容模式"
+        "5.Momo：非SDK接口的限制失效"
+        "6.Momo：数据未加密，挂载参数被修改"
+        "7.Momo：设备正在使用非原厂系统"
+        "8.Momo：tee损坏$RE"       
         )
         for m in "${!Momos[@]}"; do
         echos "${Momos[$m]}"
@@ -833,17 +366,21 @@ Momos=(
         a)
         clear; menu ;;
         1) 
-        clear; echos "$GR正在关闭调试模式$RE"; momodevelop; examm ;;
+        clear; echos "$GR正在关闭调试模式$RE"; momodevelop; ends ;;
         2) 
-        clear; echos "$GR解决 处于调试环境 问题$RE"; solve_Development; downout ;;                
+        clear; echos "$GR正在解决 init.rc被修改 问题$RE"; rshy initrc; installer; ends ;;
         3) 
-        clear; echos "$GR正在解决 非SDK接口的限制失效 问题$RE"; momosdk; examm ;;
+        clear; echos "$GR解决 处于调试环境 问题$RE"; rshy momo development; installer; ends ;;
         4) 
-        clear; echos "$GR正在解决 数据未加密，挂载参数被修改 问题$RE"; systemmount; downout ;;
+        clear; echos "$GR正在为SElinux切换至默认模式$RE"; downlockselinux; ends ;;
         5) 
-        clear; echos "$GR正在解决 设备正在使用非原厂系统 问题$RE"; nouses; downout ;;
+        clear; echos "$GR正在解决 非SDK接口的限制失效 问题$RE"; rshy momo sdk; ends ;;
         6) 
-        clear; echos "$GR正在解决tee损坏$RE"; momotee; examm ;;      
+        clear; echos "$GR正在解决 数据未加密，挂载参数被修改 问题$RE"; rshy momo systemmount; installer; ends ;;
+        7)
+        clear; echos "$GR正在解决 设备正在使用非原厂系统 问题$RE"; rshy momo addon; installer; ends ;;
+        8)
+        clear; echos "$GR正在解决tee损坏$RE"; rshy momo tee; ends ;;      
         *) 
         echos "$GR输入错误，请重新输入$RE"; Momo ;;
         esac
@@ -854,29 +391,35 @@ menu() {
      
     OPTIONS=(
         "$GR您正在使用 过检测软件 功能"
-        "以下是隐藏功能列表：$RE$YE"        
+        "带${WA}的是实验性功能"
+        "以下是隐藏功能列表：$RE$YE"
         "a.返回主菜单$RE$GR"
         "1.切换Shamiko模式"
         "2.清理LSPosed日志"
-        "3.清理magisk日志"
+        "3.清理Magisk日志"
         "4.快捷开关 开发者模式$RE$YE"
         "5.解决Momo问题"
         "6.解决牛头 (Native Test) 问题$RE$GR"              
         "7.APT检测：Root|BootLoader|Magisk|Lsposed"
         "8.YASNAC/SPIC：匹配CTS配置文件❌"
-        "9.Holmes：Miscellaneous Check (a)"
-        "10.Ruru：TWRP/XPrivacyLua/Xposed Edge"
-        "11.Native Detector：Detected LSPosed (5)"
-        "12.Hunter：SafetyDetectClient Check [Root/Unlock]"
-        "13.Hunter：Find Risk File(shizuku)"
-        "14.Holmes：Something Wrong"
-        "15.(实验)Holmes：Found Injection (9ff)"
+        "9.Ruru：TWRP/XPrivacyLua/Xposed Edge"
+        "10.RootbeerFresh：SElinux Flag is Enabled"
+        "11.Magisk检测应用：init.rc已被Magisk修改"
+        "${WA}12.Holmes：Miscellaneous Check (a)"
         "/Evil Modification (7)"
-        "16.Hunter：当前手机 已经被解锁/Boot分区签名失败"
-        "17.Native Detector：检测到Boot状态异常"
-        "18.(实验)Native Detector：Magic Mount"
-        "19.Luna：发现风险应用(com.byyoung.setting)"
-        "20.Holmes：Property Modified (1)$RE"        
+        "13.Holmes：Something Wrong"
+        "14.Holmes：Property Modified (1)"
+        "15.Holmes：Miscellaneous Check (2)"
+        "${WA}16.Holmes：Found Injection (9ff)"
+        "17.Native Detector：Detected LSPosed (5)"
+        "18.Native Detector：检测到Boot状态异常"
+        "19.Native Detector：Magic Mount"
+        "20.Hunter：SafetyDetectClient Check [Root/Unlock]"
+        "21.Hunter：Find Risk File(shizuku)"
+        "22.Hunter：当前手机 已经被解锁/Boot分区签名失败"
+        "23.Hunter：Find prop Modify Mark"
+        "24.Luna：发现风险应用"
+        "25.Luna：证书 系统安全性被破坏$RE"
     )
 
     for i in "${!OPTIONS[@]}"; do
@@ -888,14 +431,140 @@ menu() {
     select_option $yc
 }
 
+gmodules() {
+MODULELS=(
+        " "
+        "$GR您正在使用 更新模块 功能"
+        "请选择你要更新的模块"
+        " "
+        "${YE}a.返回主界面$RE"
+        "${GR}1.Shamiko v1.2.5.1 (417)"
+        "2.Zygisk Next 1.2.9.1 (534)"
+        "3.ReZygisk v1.0.0 (407)"
+        "4.Treat Wheel v0.0.4"
+        "5.NeoZygisk v1.2 (249)"
+        "6.Tricky Store v1.2.1"
+        "7.Tricky Store OSS v2.1.0 (41)"
+        "8.LSPosed v1.9.2-it (7404)"
+        "9.LSPosed-JingMatrix v1.10.1 (7189)"
+        "10.LSPosed-Irena 1.9.2 (7280)"
+        "11.PlayIntegrityFork-v14"
+        "12.Play Integrity Fix [INJECT] v4.3"
+        "13.TS Enhancer Extreme v0.8.1-Beta"
+        "14.TrickyAddonModule-v4.1"
+        "15.nohello v0.0.7 (58)"
+        "16.ZN-Audit Patch v1"
+        "17.Zygisk Maphide 2.0"
+        "18.ZLoader Next 0.1.3"
+        "19.切换Shamiko模式+添加包名(模块)"
+        "20.自动神仙救砖模块"
+        "21.自动添加包名模块(试用)"
+        "22.cherish_peekaboo嵌入"
+        "23.Hide_Bootloader v1"
+    )
+
+    clear
+    for mods in "${!MODULELS[@]}"; do
+        echos "${MODULELS[$mods]}"
+        sleep 0.01
+    done
+    echos "$YE(输入 f 退出脚本)请输入选项：$RE\c"
+    read yctw
+    select_modulels $yctw
+}
+
+# 存放模块的哈希值
+module_hash() {
+case $1 in
+    1) mhash="308d31b2f52a80e49eb58f46bc4c764a6588a79e4b8d101b44860832023f88b4" ;;
+    2) mhash="3c91deee8b8359fc2b4d115939b4f993e0d34c38b41bf7cc2ae7db29d79d3638" ;;
+    3) mhash="a404e3cf4722b6d73e4fbafc0e2b6c3aabbb96dd1340c43f6ebf0a38e9301dab" ;;
+    4) mhash="d38a4d0176327ec990c8993bbed84c1bd28820d98443541b40df04fb0d3c3f70" ;;
+    5) mhash="0d7dcb852e381289c59175f424fb363994d2ec8b392068be7ede75c035270d88" ;;
+    6) mhash="ce2934946dabc094697ef1f573e4a08d60bb2708f560f74095f33f7b60bf2a8c" ;;
+    7) mhash="b7b564fae5d0e70dc9bf61c1bab6caa84370304166b8baf96d73537d84a648c8" ;;
+    8) mhash="077de7c528b9721259ade7640c457dc8a05c4e8c147444e9ee1ea8d5a5f45775" ;;
+    9) mhash="25529045d8ab4e4ab8fd5a97685d8ace1e2322374c1666028a6c10fb5cbc498d" ;;
+    10) mhash="5bd7411d5da953f0e7b96566749a8247703ac6d6e74846ee45d0fd35bc93a51d" ;;
+    11) mhash="b75bacf7a9d169d797af13eba3ac0252d3c406b175c7b187d882296e0f7cde89" ;;
+    12) mhash="72e51d12d7f3df0516b4e4396b1a24ab1bdc90799d447e22cc4572939afcd718" ;;
+    13) mhash="03ef0c4b24a384afbb40aaa1578d084853ad617c174a9f40e244ae60114bbb9f" ;;
+    14) mhash="f75977cbeb46a2d75b5689fc9dabbd8ad0c55e36d4cb8d657da8e9d70517fcb7" ;;
+    15) mhash="0df200255651feed840c2cea353bdc265df008c31409fcb85bacd54c607f651a" ;;
+    16) mhash="e87cf1fa9144ed33ca8527c01369b234e4de44aa8d0db22525ecfd26a7843c9b" ;;
+    17) mhash="c58d4c7cdaf8c5137d6b1b37ad9c4ed5796d891ab79832745130df97278677d0" ;;
+    18) mhash="0b5f4145e1dcf27834be135cb3b5957446d14ab881ca7f31e84a6acedd8ab053" ;;
+    19) mhash="75ec17e7a133a3627c576108c380cacc45bf730734d2b10243ba4832fdc411cc" ;;
+    20) mhash="c2fe31adbd4d4ef08fb9d887bcee484005379d1e7641f2075f98365170bd88b8" ;;
+    21) mhash="c46f0139ba466f98a18fd79c8f2219974f85b5cda59cf626cf2bccc710a72d83" ;;
+    23) mhash="beae621fc686862894dc51c15b1686dad7603d7689f365ecc6470b143c9c391e" ;;
+esac
+}
+
+# 存放下载模块的链接
+module_url() {
+case $1 in
+    1) share_key="ihNR035paq3i" ;;
+    2) share_key="iQvYb351icte" ;;
+    3) share_key="iBd9q35b57sf" ;;
+    4) share_key="inl0b351ibze" ;;
+    5) share_key="indk5351ibba" ;;
+    6) share_key="iIt88351ic7c" ;;
+    7) share_key="ibCGy353muze" ;;
+    8) share_key="ikoL2351ib0j" ;;
+    9) share_key="ipxL4351ib7g" ;;
+    10) share_key="iXSU2351ib3c" ;;
+    11) share_key="imnUV351ibfe" ;;
+    12) share_key="iXMep35b56lc" ;;
+    13) share_key="iJC89351ic8d" ;;
+    14) share_key="iemi1351ic3i" ;;
+    15) share_key="iZF4P351ibdc" ;;
+    16) share_key="ize7T351icgb" ;;
+    17) share_key="iyOP7351icid" ;;
+    18) share_key="iQIyW351icfa" ;;
+    19) share_key="iCU9o351ibih" ;;
+    20) share_key="iRR0r351icvg" ;;
+    21) share_key="id0lL351icuf" ;;
+    23) share_key="i8HY8351icza" ;;
+esac
+murl="https://lz.qaiu.top/d/lz/$share_key"
+}
+
+# 下载提供的模块
+select_modulels() {
+module_info() {
+module_hash "$1"
+module_url "$1"
+download_module "$murl" "$mhash"
+installer
+}
+case $1 in
+    a)
+    clear; selmenu ;;    
+    1)
+    clear; echos "$GR正在下载Shamiko$RE"; download_shamiko; ends ;;
+    [2-3] | 5)
+    clear; detect_magisk; echos "$GR正在下载Zygisk模块$RE"; module_info "$1"; ends ;;    
+    [3-4] | [6-21] | 23)
+    clear; echos "$GR正在下载模块$RE"; module_info "$1"; ends ;;
+    22)
+    clear; ddpeekaboo; ends ;;
+    f)
+    echos "$GR正在退出脚本$RE"; exit 0 ;;
+    *)
+    echos "$YE输入错误，请重新选择$RE"; echos "$GR请等待2秒$RE"; sleep 1.4; gmodules ;;
+esac
+}
+
 selmenu() {
 clear
 # 选择root管理器
     if [[ $ENVIRONMENT = "Magisk" ]]; then
-        if echos "$MAGISK_F" | grep -qi "kitsune"; then
+        if echos "$MAGISK_FORK" | grep -qi "kitsune"; then
 	    	MANAGER="$YE检测到你已root
 你的root管理器为Kitsune Mask("$MAGISK_VERSION")$RE"
-        elif echos "$MAGISK_F" | grep -qi "alpha"; then
+            Kistune=1
+        elif echos "$MAGISK_FORK" | grep -qi "alpha"; then
             MANAGER="$YE检测到你已root
 你的root管理器为Magisk Alpha("$MAGISK_VERSION")$RE"
         else
@@ -904,10 +573,10 @@ clear
         fi
 	elif [[ $ENVIRONMENT = "KernelSU" ]]; then
 		MANAGER="$YE检测到你已root
-你的root管理器为KernelSU("$KSU_VERSION")$RE"
+你的root管理器为KernelSU(v"$KSU_VERSION")$RE"
     elif [[ $ENVIRONMENT = "SukiSU" ]]; then
 		MANAGER="$YE检测到你已root
-你的root管理器为SukiSU(v"$KSU_VERSION")$RE"    
+你的root管理器为SukiSU(v"$KSU_VERSION")$RE"
     elif [[ $ENVIRONMENT = "APatch" ]]; then
     APATCH_NEXT_VERSIONS="11008 11010 11021"
         if echos " $APATCH_NEXT_VERSIONS " | grep -q " $APATCH_VERSION "; then
@@ -924,208 +593,107 @@ clear
 未知root管理器，请谨慎使用脚本$RE"
 	fi
 
+yiyan=$(rshy --yiyan)
+
 MENU=(
-        "                                        "
+        " "
        "$GR————————————————————————————————————————————————"
-        "                                        "
-        "    $GR欢 迎 使 用$GR$GR R$GR${GR}O$GR${GR}O$GR${GR}T$GR$GR 隐$GR$GR 藏$GR$GR 脚$GR$GR 本$GR"        
-        "                                        "
-        "————————————————————————————————————————————————"
-        "                                        "
+        ".########.##.....##..#######..########..##....##."
+        ".##.......##.....##.##.....##.##.....##..##..##.."
+        ".##.......##.....##.##.....##.##.....##...####..."
+        ".######...#########.##.....##.########.....##...."
+        ".##.......##.....##.##.....##.##...##......##...."
+        ".##.......##.....##.##.....##.##....##.....##...."
+        ".########.##.....##..#######..##.....##....##...."
+       "————————————————————————————————————————————————"
+        " "
+        "$WH每日一言："
+        $yiyan$RE
         "${YE}AUTHOR：酷安@yu13140$RE"
-        "$YE当前脚本的版本号为：$YUSHELLVERSION$RE"        
+        "$YE当前脚本的版本号为：$SCRIPT_VERSION$RE"        
         "$MANAGER"
-        "                                        "
+        " "
         "$GR请选择你需要使用的功能"
         "1.过检测软件功能"
-        "                                        "
-        "2.配置隐藏应用列表(可过Luna)"
-        "                                        "
-        "3.一键安装隐藏所需模块"
-        "                                        "
-        "4.一键安装检测软件10件套"
-        "                                        "
-        "5.安装当前设备上的指定模块"
-        "                                        "
-        "6.(实验)切换Root方案"
-        "                                        $RE"
+        " "
+        "2.更新模块功能"
+        " "
+        "3.配置隐藏应用列表(可过Luna)"
+        " "
+        "4.一键安装隐藏所需模块"
+        " "
+        "5.一键安装检测软件10件套"
+        " "
+        "6.安装当前设备上的指定模块"
+        " "
+        "7.(实验)切换Root方案"
+        " $RE"
     )
     
     for act in "${!MENU[@]}"; do
         echos "${MENU[$act]}"
         sleep 0.009
     done
-    echos "$YE(输入 f 退出脚本)请输入选项以执行下一步：$RE\c"
+    echos "$RE$YE(输入 f 退出脚本)请输入选项以执行下一步：$RE\c"
     read ssmenu
     menuss $ssmenu
 }
 
-chlist() {
-NUMLIST=(
-           "$GR你正在使用 配置隐藏应用列表 功能"
-           "此功能只适合下面含有包名的隐藏应用列表使用"
-           "不支持的应用，会把配置文件下载到/sdcard/Download/文件夹内"
-           "支持的包名：com.tsng.hidemyapplist"
-           "支持的包名：com.tencent.wifimanager"
-           "支持的包名：com.hicorenational.antifraud"
-           "1.配置隐藏应用列表"
-           "2.恢复原配置"
-           "3.退出脚本$RE"
-	       "                                        "
-	       )
-	for coh in "${!NUMLIST[@]}"; do
-        echos "${NUMLIST[$coh]}"
-        sleep 0.1
-    done
-	echos "$YE请输入对应的数字：$RE\c"
-	read ch
-    case $ch in
-    1)
-    hidemyapplist ;;
-    2)
-    recoverapplist ;;
-    3) 
-    echos "$GR正在退出脚本……$RE"; exit 0 ;;        
-    *) 
-    echos "$GR输入错误，请重新输入$RE"; chlist ;;
-    esac
-}
-
+# 安装检测软件
 installapks() {
 echos " "
 echos "$YE正在下载必要文件中$RE"
-CDNUM=1
-speedforcheck
-cdn_url="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/apk.zip"
-down_cdn "5a703ca791322f3f9295ab741fff860eb214ba971071ba38b387ba0976e4c8a1"
+downloader "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/apk.zip" "5bce4897a8a438c4319a44e750c2d69128400d12eb3daef7adece0fcb5fe5573"
     
     sleep 0.1
     echos "                                        "
-    pm uninstall icu.nullptr.nativetest >/dev/null 2>&1
-    pm uninstall com.android.nativetest >/dev/null 2>&1
-    pm uninstall com.reveny.nativecheck >/dev/null 2>&1
-    pm uninstall com.zhenxi.hunter >/dev/null 2>&1
-    pm uninstall me.garfieldhan.holmes >/dev/null 2>&1
+    pmx uninstall icu.nullptr.nativetest >/dev/null 2>&1
+    pmx uninstall com.android.nativetest >/dev/null 2>&1
+    pmx uninstall com.reveny.nativecheck >/dev/null 2>&1
+    pmx uninstall com.zhenxi.hunter >/dev/null 2>&1
+    pmx uninstall me.garfieldhan.holmes >/dev/null 2>&1
     echos "${YE}正在为您安装检测软件$RE"
     unzip -o ""$MODULE_DE"" -d "/data/local/tmp/yshell/apks/"
     for apk_file in /data/local/tmp/yshell/apks/*; do
         if [[ -f "$apk_file" ]] && echo "$apk_file" | grep -iqE '\.apk$'; then
             apk_name="$(basename $apk_file .apk)"
-            install_output=$(pm install "$apk_file")
+            install_output=$(pmx install "$apk_file")
             if echo "$install_output" | grep -iq "Success"; then
-                echos "$WH$apk_name安装完成$RE"                
+                echos "$WH$apk_name安装完成$RE"
             else
                 echos "$WH$apk_name安装失败"
             fi
         fi
-    done    
-}                  
-
-hidemyapplist() {
-echos "                                        "
-if [[ -d /data/data/com.tsng.hidemyapplist ]] || [[ -d /data/data/com.tencent.wifimanager ]] || [[ -d /data/data/com.hicorenational.antifraud ]]; then
-    if [[ -d /data/data/com.tsng.hidemyapplist ]]; then
-        file2="/data/data/com.tsng.hidemyapplist/files/config.json"
-    elif [[ -d /data/data/com.tencent.wifimanager ]]; then
-        file2="/data/data/com.tencent.wifimanager/files/config.json"
-    elif [[ -d /data/data/com.tsng.hidemyapplist ]]; then
-        file2="/data/data/com.hicorenational.antifraud/files/config.json"
-    fi
-    echos "$GR正在下载配置文件$RE"
-    CDNUM=1
-    speedforcheck
-    MODULE_DE="$YSHELL_PATH/config.json"
-    cdn_url="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/config.json"
-    down_cdn "a54af8e29e47c2d9d9a3d35b2b028b6e34194ea3a2f3ab810dcc1e293881bb7f"
-    sleep 0.1
-    echos "                                        "
-    if [[ -f "$file1" ]]; then
-        if [[ ! -d "$backup_dir" ]]; then
-            mkdir -p "$backup_dir"    
-        fi
-    
-        if [[ -f "$file2" ]]; then
-            cp "$file2" "$backup_file"
-            echos "$YE备份完成：已将原配置文件备份到$backup_dir$RE"
-        else
-            echos "$YE警告：原配置文件不存在，跳过备份$RE"
-        fi    
-        cat "$file1" > "$file2"
-        sleep 1.4
-        [[ $? -ne 0 ]] && echos "$RED操作未完成！！$RE" && rm -f $file1 && return 1
-        echos "$GR配置已完成$RE" 
-    fi
-rm -f $file1
-ends
-else
-    echos "$YE没有找到隐藏应用列表应用"
-    echos "下载下来的配置文件将存放在/sdcard/Download/文件夹里"
-    echos "需要您手动到隐藏应用列表里点击还原配置$RE"
-    echos "$GR正在下载配置文件$RE"
-    CDNUM=1
-    speedforcheck
-    MODULE_DE="$YSHELL_PATH/config.json"
-    cdn_url="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/config.json"
-    down_cdn "a54af8e29e47c2d9d9a3d35b2b028b6e34194ea3a2f3ab810dcc1e293881bb7f"
-    sleep 0.1
-    echos " "
-    mv -f $file1 /sdcard/Download/配置隐藏应用列表.json
-    echos "已将配置文件保存在 /sdcard/Download/ 中"
-    ends
-fi
+    done
 }
 
-recoverapplist() {
-echos " "
-if [[ -d /data/data/com.tsng.hidemyapplist ]] || [[ -d /data/data/com.tencent.wifimanager ]] || [[ -d /data/data/com.hicorenational.antifraud ]]; then
-    if [[ -d /data/data/com.tsng.hidemyapplist ]]; then
-        file2="/data/data/com.tsng.hidemyapplist/files/config.json"
-    elif [[ -d /data/data/com.tencent.wifimanager ]]; then
-        file2="/data/data/com.tencent.wifimanager/files/config.json"
-    elif [[ -d /data/data/com.hicorenational.antifraud ]]; then
-        file2="/data/data/com.hicorenational.antifraud/files/config.json"    
-    fi
-    if [[ -f "$backup_file" ]]; then
-       cat "$backup_file" > "$file2"
-       rm -f $backup_file
-       sleep 1
-       echos "$YE恢复备份成功$RE"
-       ends
-    else
-       echos "$YE错误：备份文件不存在！$RE"
-       exit 0
-    fi
-else
-    echos "$YE未找到手机上的隐藏应用列表$RE"
-    exit 0
-fi
-}
-
-extramodule() {
-extraout() {
-        echos "1.回到主菜单       2.继续输入         3.退出此脚本$RE"
-	    echos " "
-	    echos "$GR请输入选项：$RE\c"
-	    read whextra
-	    case $whextra in
-        1) 
-        clear; selmenu ;;
-        2) 
-        clear; extramodule ;;
-        3) 
-        echos "$GR正在退出脚本……$RE"; sleep 1; exit 0 ;;
-        *)
-        echos "$GR输入错误，默认返回主菜单$RE"; clear; selmenu ;; 
-        esac
+# 自定义安装本地模块
+extra_module() {
+extra_out() {
+extra_options=("回到主菜单" "继续输入" "退出此脚本")
+PS3="请输入选项 [1-${#options[@]}]: "
+echos "$GR "
+select extra_choice in "${extra_options[@]}"; do
+    case $extra_choice in
+        "回到主菜单")
+            echos "$RE "; clear; selmenu ;;
+        "继续输入")
+            clear; extra_module ;;
+        "退出此脚本")
+            echos "正在退出脚本……$RE"; sleep 1; exit 0 ;;
+        *) 
+            echos "输入错误，默认返回主菜单$RE"; clear; selmenu ;;
+    esac
+done
 }
 
 IMODULELIST=(
-           "$GR你正在使用 安装设备上的指定模块 功能$RE"           
-           "                              "
+           "$GR你正在使用 安装设备上的指定模块 功能$RE"
+           " "
            "$GR你可以输入一个文件夹，自动识别该文件夹内的压缩包"
-           "需要安装的模块的上一级路径，请确认没有同名文件夹或文件，不然可能会出现问题"          
+           "需要安装的模块的上一级路径，请确认没有同名文件夹或文件，不然可能会出现问题" 
            "你也可以输入需要安装的模块的绝对路径"
-           "                          $RE"                              
+           " $RE"
 	       )
 	for exm in "${!IMODULELIST[@]}"; do
         echos "${IMODULELIST[$exm]}"
@@ -1148,21 +716,21 @@ IMODULELIST=(
 	    done
 	    if [[ $module_found -eq 0 ]]; then	    
 	        echos "$YE你输入的文件夹里好像没有压缩包呢，需要退出此功能吗$RE"
-	        extraout    
+	        extra_out    
 	    fi    
 	    MODULE_DE="$YSHELL_PATH/installmodule.zip"
-	    downout
+	    ends
 	elif [[ -f $wmo ]]; then
 	    MODULE_DE="$wmo"
 	    installer
 	    MODULE_DE="$YSHELL_PATH/installmodule.zip"
-	    downout
+	    ends
         if [[ $? -ne 0 ]]; then
 	        echos "$YE模块：$MODULE_DE安装失败$RE"   
 	    fi
 	else
 	    echos "$YE你输入的好像不是一个压缩包或者一个文件夹呢，需要退出此功能吗$RE"
-	    extraout
+	    extra_out
     fi	      
 }
 
@@ -1198,20 +766,17 @@ echos "$GR你正在使用 快捷切换Root方案 功能"
 echos "此功能的实现都在模块内完成"
 echos "感谢酷安@Aurora星空_Z的AMMF框架！"
 echos "正在下载必要文件……$RE"
-CDNUM=1
-speedforcheck
-cdn_url="https://github.com/yu13140/RootSwitcher/releases/download/v2.3.0_development/RootSwitcher_v2.3.0_development.zip"
-down_cdn "04d23e833db2aa2dde7c37234491230baf6812cc0a6e33cd04799a61806fbd6e"
+downloader "https://github.com/yu13140/RootSwitcher/releases/download/v2.3.0_development/RootSwitcher_v2.3.0_development.zip" "04d23e833db2aa2dde7c37234491230baf6812cc0a6e33cd04799a61806fbd6e"
 }
 
 awarmlist() {
 clear
+detect_magisk
 WARMLIST=(
            "$GR你正在使用 一键刷入所需模块 功能$RE"           
-           "                              "
-           "$YE非常感谢酷安@Aurora星空_Z的自动化安装模块！"
-           "非常感谢酷安@传说中的小菜叶提供的技术支持$RE"
-           "                              "
+           " "
+           "$YE非常感谢酷安@Aurora星空_Z的自动化安装模块！$RE"
+           " "
            "$GR请手动选择是否把当前所有模块全部删除"
            "1.删除当前所有模块"
            "2.保留当前所有模块(可能会导致隐藏效果不好)$RE"
@@ -1233,11 +798,6 @@ WARMLIST=(
 }
 
 ddpeekaboo() {
-if [[ ! $ENVIRONMENT = "APatch" ]]; then
-    echos "$YE非APatch用户请不要安装peekaboo"
-    echos "默认跳转到主菜单……$RE"
-    selmenu
-fi
 wfpeekaboo() {
     echos "$YE好像没刷入peekaboo模块呢！请私信酷安@yu13140反馈错误$RE"
     rm -rf $YSHELL_PATH/*
@@ -1248,36 +808,31 @@ if [[ $APATCH_VERSION -le 11010 ]] && [[ $APATCH_VERSION -ge 10983 ]]; then
     echos "$YE您的APatch版本太低，不建议您嵌入Nohello模块$RE"
     return 1
 fi
-CDNUM=1
-cdncheck
-speedforcheck
-cdn_url="${CDN}https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/peekaboo/nohello.kpm"
-MODULE_DE="$YSHELL_PATH/nohello.kpm"
-down_cdn "91b8d078bfb7668a7d786ecaec87776e08cd107c0fae4bf4c65639bcd7368f23"
+rshy --download "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/peekaboo/nohello.kpm" "nohello.kpm"
 [[ ! -f $YSHELL_PATH/nohello.kpm ]] && echos "${YE}Nohello未下载成功，取消安装操作$RE" && return 1
 insnh=1
 }
+if [[ ! $ENVIRONMENT = "APatch" ]]; then
+    echos "$YE非APatch用户请不要安装peekaboo"
+    sleep 2
+    return 1
+fi
+
 echos "$RED这是一个高危选项，请确保手机自备救砖能力$RE"
 echos " "
 echos "$GR若你已经确认过风险，并选择安装，请输入 1 "
-echos "1.安装                         2.不安装"
-echos "请输入对应的选项：$RE\c"
-
-if [[ $SHELL == *mt* ]]; then    
-    DOWN3="-o "$YSHELL_PATH/peekaboo.kpm""
-else    
-    DOWN3="-o "$YSHELL_PATH/peekaboo.kpm""
-fi
-
-read warnpeekaboo
-    case $warnpeekaboo in
-    1) 
-    echos "$GR正在进入安装模块环节$RE";;
-    2) 
-    echos "$YE你选择退出安装peekaboo$RE"; return ;;
+choice=("安装" "不安装")
+PS3="请输入对应的选项："
+select nohello_choice in "${choice[@]}"; do
+    case $choice in
+    安装)
+    echos "正在进入安装模块环节$RE"; ddnohello; break ;;
+    不安装)
+    echos "$RE$YE你选择不嵌入Nohello$RE"; break ;;
     *)
-    clear; continue ;;
+    echos "$RE$YE输入错误，默认不嵌入Nohello$RE"; break ;;
     esac
+done
 
 echos " "
 echos "$YE请输入当前APatch的超级密钥，这不会侵犯您的任何隐私"  
@@ -1301,13 +856,13 @@ else
     echos "$YE未找到你的APatch，请确认是否安装了APatch管理器$RE"
     return 1
 fi
-APP_AP_PATH="$APP_AP_PATHS/lib/arm64"
+APP_AP_PATH="$APP_AP_PATHS/lib/arm64" 
 
 if [[ ! -d "/dev/block/by-name" ]]; then   
     SITE="/dev/block/bootdevice/by-name"
     if [[ ! -d "/dev/block/bootdevice/by-name" ]]; then
         echos "$YE未检测到分区路径，接下来不会嵌入peekboo$RE"
-        return
+        return 1
     fi 
 else
     SITE="/dev/block/by-name" 
@@ -1328,26 +883,26 @@ fi
         echos "$YE输入错误，默认不安装$RE"; return ;;
         esac
     fi
-CDNUM=1
-cdn_url="${CDN}https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/peekaboo/cherish_peekaboo_${pvs}.kpm"
-MODULE_DE="$YSHELL_PATH/peekaboo.kpm"
-if [[ $APATCH_VERSION -le 11010 ]] && [[ $APATCH_VERSION -ge 10983 ]]; then
-    echos "$WH检测到您正在使用APatch($APATCH_VERSION)"
-    echos "推荐使用cherish_peekaboo_1.5" && pvs=1.5
-    echos "正在下载中……$RE"
-    speedforcheck
-    down_cdn "dec811b081676f21c8dcaeeda54b38a87049f08d7567cb191be28dddf84280e7"    
-else
-    if [[ $APATCH_VERSION -eq 11021 ]]; then
+
+case $APATCH_VERSION in
+    11021)
         echos "$WH检测到您正在使用APatch Next(11021)"
-    else    
+        echos "推荐使用cherish_peekaboo_1.5.5"
+        echos "正在下载中……$RE"        
+        rshy --download "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/peekaboo/cherish_peekaboo_1.5.5.kpm" "peekaboo.kpm"
+    ;;
+    [10983-11010])
+       echos "$WH检测到您正在使用APatch($APATCH_VERSION)"
+       echos "推荐使用cherish_peekaboo_1.5"
+       echos "正在下载中……$RE"
+       rshy --download "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/peekaboo/cherish_peekaboo_1.5.kpm" "peekaboo.kpm"
+    ;;
+    *) 
         echos "$WH检测到您正在使用APatch($APATCH_VERSION)"
-    fi
-    echos "推荐使用cherish_peekaboo_1.5.5" && pvs=1.5.5
-    echos "正在下载中……$RE"
-    speedforcheck
-    down_cdn "a34f454b446ce3a15a08f3927b9129a1656b54875998ac220b7612cf6ab7b390"
-fi
+        echos "推荐使用cherish_peekaboo_1.5.5"
+        echos "正在下载中……$RE"
+        rshy "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/peekaboo/cherish_peekaboo_1.5.5.kpm" "peekaboo.kpm"
+esac
 
 [[ ! -f $YSHELL_PATH/peekaboo.kpm ]] && echos "${YE}peekaboo未下载成功，取消安装操作$RE" && return 1
 
@@ -1422,111 +977,97 @@ rm -f peekaboo.kpm
 mv new-boot.img boot.img
 
 dd if=boot.img of="$position" bs=4M
-echos "$GR已成功刷入peekaboo模块$RE"
-rm -rf $YSHELL_PATH/*      
+if [[ $? -ne 0 ]]; then
+    echos "$YE未刷入peekaboo模块！$RE"
+else
+    echos "$GR已成功刷入peekaboo模块$RE"
+fi
+rm -rf $YSHELL_PATH/*
 }
 
 yuhide() {    
-    echos "$WH临时把Selinux切换至宽容模式，这是安装需要的。$RE"
-    setenforce 1
-    setenforce 0
     echos "$YE正在下载必要文件中$RE"
-    mod=1 & CDNUM=1
-    speedforcheck
-
     if [[ $Kistune == 1 ]]; then
-        cdn_url="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/Kistune.zip"
+        murl="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/Kistune.zip"
     elif [[ $ENVIRONMENT == "APatch" ]]; then
-        cdn_url="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/APatch.zip"
+        murl="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/APatch.zip"
     else
-        cdn_url="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/ARMIAS.zip"
+        murl="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/ARMIAS.zip"
     fi
-
-    down_cdn   
-     
-    BOOTHASH="$(getprop ro.boot.vbmeta.digest 2>/dev/null)"
-    three_party="$(printf '0%.0s' {1..64})"
-    if [[ ! $BOOTHASH = " " ]] || [[ ! $BOOTHASH = "$three_party" ]]; then
-        mkdir -p /data/adb/modules/Reset_BootHash		
-		echos "id=Reset_BootHash
-name=重置哈希值
-version=搬运 @yu13140
-versionCode=20240917
-author=topmiaohan
-description=辅助Tricky Store，实现增强BL隐藏。" >>/data/adb/modules/Reset_BootHash/module.prop
-        echos "resetprop -n ro.boot.vbmeta.digest $BOOTHASH" >>/data/adb/modules/Reset_BootHash/service.sh
-    else
-       echos "$GR未检测到哈希值或哈希值错误，自动跳过"
-    fi
+    rshy --download $murl $MODULE_DE
+    rshy --nativetest boothash
+    installer
     
     if [[ $ENVIRONMENT = "APatch" ]]; then
         echos "$YE选择是否需要刷入cherish_peekaboo模块$RE$RED(高危选项)$RE$YE"
-        echos "1.安装                         2.不安装"
-        echos "请输入对应的选项：$RE\c"
-        read inspeekaboo
-        case $inspeekaboo in
-        1) 
-        ddpeekaboo ;;
-        2) 
-        echos "$YE你选择不安装peekaboo模块$RE" ;;
-        *)
-        echos "$YE输入错误，默认不安装$RE" ;;
-        esac
-    fi            
+        choice=("安装" "不安装")
+        PS3="请输入对应的选项："
+        select inspeekaboo in "${choice[@]}"; do
+            case $inspeekaboo in
+            安装)
+            echos "正在进入安装模块环节$RE" ; ddpeekaboo; break ;;
+            不安装)
+            echos "$YE你选择不安装peekaboo模块$RE"; break ;;
+            *)
+            echos "$YE输入错误，默认不安装$RE"; break ;;
+            esac
+        done
+    fi
 
     if [[ $ENVIRONMENT != "APatch" ]]; then   
         echos " "    
         echos "$YE选择是否安装自动神仙救砖模块"
-        echos "1.安装                         2.不安装"
-        echos "请输入对应的选项：$RE\c"
-        read installs
-        case $installs in
-        1) 
-        downautomatic ;;
-        2) 
-        echos "$YE你选择不安装自动神仙救砖模块$RE" ;;
-        *)
-        echos "$YE输入错误，默认不安装$RE" ;;
-        esac
-    fi            
+        choice=("安装" "不安装")
+        PS3="请输入对应的选项："
+        select installs in "${choice[@]}"; do
+            case $installs in
+            安装)
+            echos "正在进入安装模块环节$RE" ; select_module "8"; break ;;
+            不安装)
+            echos "你选择不安装自动神仙救砖模块$RE"; break ;;
+            *)
+            echos "$YE输入错误，默认不安装$RE"; break ;;
+            esac
+        done
+    fi
     
     echos " "    
     echos "$YE选择是否安装检测软件10件套"
-    echos "1.安装                         2.不安装"
-    echos "请输入对应的选项：$RE\c"
-read installsapk
+    choice=("安装" "不安装")
+    PS3="请输入对应的选项："
+select installapk in "${choice[@]}"; do
     case $installsapk in
-    1) 
-    installapks ;;
-    2) 
-    echos "$YE你选择不安装检测软件10件套$RE" ;;
+    安装) 
+    installapks; break ;;
+    不安装) 
+    echos "你选择不安装检测软件10件套$RE"; break ;;
     *)
-    echos "$YE输入错误，默认不安装$RE" ;;
+    echos "输入错误，默认不安装$RE"; break ;;
     esac
+done
     
     clear
     echos "$YE正在清理残余垃圾，请稍等……$RE"
-    rm -f /data/local/tmp/wget-log
     rm -f "$MODULE_DE"
-    sleep 1
-    setenforce 0
-    setenforce 1
-    downout
+    sleep 1    
+    ends
 }
 
 menuss() {
 case $1 in
     1) 
     clear; menu ;;
-    2)
-    clear; chlist ;;
+    2) 
+    clear; gmodules ;;
     3)
-    clear; awarmlist ;;
+    clear; chlist ;;
     4)
-    clear; installapks; examm ;;
+    clear; awarmlist ;;
     5)
-    clear; extramodule ;;
+    clear; installapks; ends ;;
     6)
+    clear; extramodule ;;
+    7)
     clear; switchroot ;;    
     f) 
     echos "$GR正在退出脚本$RE"; exit 0 ;;
@@ -1554,14 +1095,10 @@ start() {
     echos "                                        "
 	echos "$RED请仔细阅读上面的注意事项$RE"
 	echos " "
-	echos "$YE当前版本：$YUSHELLVERSION$RE$WH"
+	echos "${YE}当前版本：${SCRIPT_VERSION}_${PATCH_VERSION}${RE}${WH}"
 	echos " "
-	echos "- - - - - - -NOTICE- - - - - - -"	
-	echos "1.当执行使用开源版本的脚本时，"
-	echos "原作者将不会承担其带来的任何后果"
-    echos "2.可以进行二改，但请署上原作者名字"
-    echos "3.根据许可证，此脚本禁止用于商业用途"
-    echos "4.如果想要反馈问题，请联系原作者"
+	echos "- - - - - - -更新日志- - - - - - -"	
+	echos "详情请看下载的压缩包内的更新日志"
 	sleep 1.2
 	echos "                                        $RE"
 	echos "$GR若需要使用此脚本，请输入 1"
@@ -1577,62 +1114,59 @@ start() {
     *) 
     echos "$GR输入错误，退出脚本$RE"; exit 0 ;;
     esac
-}       
+}
 
-rm -f $MODULE_DE
-waitingstart
-trap "settings put global adb_enabled 0;settings put global development_settings_enabled 0" EXIT
-clear
-settings put global adb_enabled 1
-settings put global development_settings_enabled 1
-detect_environment
-
-if [[ $SHELL != *mt* ]]; then
-    if [[ $SHELL == *termux* ]]; then
-        echos "$WH请不要在Termux环境执行此脚本，可能会出现问题$RE"
+waitingstart() {
+    if [[ "$(whoami)" != "root" ]]; then
+        echo "当前脚本的所有者为: $(whoami)"
+        echo "- 本脚本未获得 Root 权限，请授权"
         exit 1
     fi
-    
-    if [[ ! -f "/data/yshell/busybox" ]]; then
-        echos "$WH检测到脚本正在使用系统环境，需要额外的配置"
-        echos "确定下载吗？(下载过之后就不需要再下载了)"
-        echos "1.下载                    2.不下载"
-        echos "请输入选项：$RE\c"
-        read downelse
-        case $downelse in
-        1) 
-        downbusybox ;;
-        2) 
-        echos "$GR那就请你使用扩展包选项$RE"; exit 0 ;;
-        *) 
-        echos "$GR输入错误，退出脚本$RE"; exit 1 ;;
-        esac       
-    fi
-fi    
 
-if [[ $ENVIRONMENT = "APatch" ]]; then
-    if [[ $APATCH_VERSION == 10933 ]]; then
-        if [[ $SHELL != *mt* ]]; then
-                echos "$YE "           
-                echos "APatch10933请使用MT扩展包选项！$RE"
-                exit 1
-        fi        
-        BIN_PATH="$(echo $SHELL | sed 's/bash//g')"
-        if [[ ! -f $BIN_PATH/cmd ]]; then
-            echos "$WH  "               
-            echos "Oops！你的APatch版本为10933"                          
-            echos "或许需要一些额外设置，才能使用脚本"
-            echos "正在下载中(如果觉得下载慢，可以开启VPN)$RE"                
-            CDNUM=1 && MODULE_DE="$YSHELL_PATH/cmd"
-            speedforcheck
-            cdn_url="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/cmd"
-            down_cdn "08da8ac23b6e99788fd3ce6c19c7b5a083b2ad48be35963a48d01d6ee7f3bb6d"
-            mv "$YSHELL_PATH/cmd" "$BIN_PATH"
-            echos "$WH重新执行脚本以生效$RE"
-            exit 0
+    yudir="$(dirname "$0")"
+    STARTSHELL="${YSHELL_PATH}/start.sh"
+
+    if [[ "${yudir}" != "${YSHELL_PATH}" ]]; then
+        rm -rf "${YSHELL_PATH}"
+        if [[ ! -d "${YSHELL_PATH}" ]]; then
+            mkdir -p "${YSHELL_PATH}" || { echo "无法创建目录 ${YSHELL_PATH}"; exit 1; }
+            umask 022
         fi
-    fi
-fi
 
-downloader  
+        cp -af "$0" "${STARTSHELL}" || { echo "由于权限问题，脚本复制失败"; exit 1; }
+        exec sh "${STARTSHELL}"
+    fi
+    
+    [[ -f "${YSHELL_PATH}/rshy" ]] && rm -f "${YSHELL_PATH}/rshy"
+    sed "1,/^# This is the last line of the script/d" "$0" | base64 -d > "${YSHELL_PATH}/rshy"
+    chmod 755 "${YSHELL_PATH}/rshy"
+    export PATH="${YSHELL_PATH}:$PATH"
+}
+
+Initialization() {
+rshy --color
+sleep 2
+clear
+}
+
+update() {
+local_version=$(rshy --version | tr -d '[:space:]')
+remote_version=$(rshy --update | tr -d '[:space:]')
+
+if [[ "$remote_version" != "$local_version" ]]; then
+    echos "$WH有新版本可以更新！"
+    echos "网盘更新地址：https://www.123684.com/s/Wq68jv-Fec4?"
+    echos "提取码：rn1C$RE"
+    exit 0
+fi
+}
+
+trap 'rm -rf $YSHELL_PATH; set +m kill -15 $$ 2>&1 >/dev/null' EXIT
+waitingstart
+rm -f $MODULE_DE
+update
+detect_environment
+clear
+Initialization
 start
+exit 0

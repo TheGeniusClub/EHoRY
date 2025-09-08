@@ -13,8 +13,7 @@
 1.确认MT管理器已经拥有Root权限  
 2.打开MT管理器(最好不是特别老的版本)  
 3.点击下载好的脚本，点击设置  
-4.勾选*使用 ROOT权限 执行*，上面那两项随便选(哪项可以执行选哪项)  
-- 4.1 对于Kitsune Mask(狐狸面具)用户，请使用MT扩展包选项  
+4.勾选*使用 ROOT权限 执行*，上面那两项随便选(哪项可以执行选哪项)   
 5.点击 执行 按钮，按脚本要求操作  
 - 特别地：如果执行脚本时出现了错误，请你私信酷安@yu13140以报告脚本错误
 
@@ -151,18 +150,33 @@
 9.Luna：发现风险应用(com.byyoung.setting)  
 10.Holmes：Property Modified (1) 
 
-#### v4.8_Mysterious (v2)
-1.修复了APatch无法嵌入peekaboo模块的问题 
-2.修复KSU用户无法安装LSPosed模块的问题 
-3.修复春秋检测 检测出Found Injection(c) 
-4.添加Nohello模块(仅APatch) 
-5.取消配置LSPosed模块的功能 
-6.可选择嵌入Nohello内核模块(仅APatch高版本) 
-7.优化对错误输出的处理 
-8.禁止校验一键模块 
+#### v4.8_Mysterious
+1.修复了APatch无法嵌入peekaboo模块的问题   
+2.修复KSU用户无法安装LSPosed模块的问题  
+3.修复春秋检测 检测出Found Injection(c)  
+4.添加Nohello模块(仅APatch)  
+5.取消配置LSPosed模块的功能  
+6.可选择嵌入Nohello内核模块(仅APatch高版本)   
+7.优化对错误输出的处理  
 
 #### v4.9_Nothing (v2)
 1.大大减小了一键模块下载的体积  
 2.禁止校验一键模块  
 3.添加了对SukiSU的识别  
 4.修复了一些已知的问题  
+
+#### v5.0_FakeLove
+1.使用Rust进行重构代码  
+2.添加了初始化动画与每日一言  
+3.脱离对curl和wget的依赖(使用request库)  
+4.尝试解决在外部存储不能执行脚本的问题  
+5.修复执行cmd命令时的权限问题  
+6.删除从Github下载文件进行云更新的逻辑  
+7.全自动配置隐藏应用列表(包括改包名版)  
+8.全自动配置verifiedboothash值  
+9.Magisk：检查是否开启了内置zygisk  
+10.加快了模块的下载速度  
+11.优化对错误输出的处理  
+12.修复了Native Test：Futile Hide (01)的错误  
+13.Hunter：Find prop Modify Mark  
+14.Luna：证书 系统安全性被破坏  
