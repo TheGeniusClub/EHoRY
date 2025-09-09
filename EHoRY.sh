@@ -470,7 +470,7 @@ MODULELS=(
     done
     echos "$YE(输入 f 退出脚本)请输入选项：$RE\c"
     read yctw
-    select_modulels $yctw
+    select_modules $yctw
 }
 
 # 存放模块的哈希值
@@ -531,7 +531,7 @@ murl="https://lz.qaiu.top/d/lz/$share_key"
 }
 
 # 下载提供的模块
-select_modulels() {
+select_modules() {
 module_info() {
 module_hash "$1"
 module_url "$1"
@@ -754,9 +754,9 @@ NUMLIST=(
 	read ch
     case $ch in
     1)
-    rshy --hidemyapplist && ends ;;
+    rshy hidemyapplist && ends ;;
     2)
-    rshy --recoverapplist && ends ;;
+    rshy recoverapplist && ends ;;
     3) 
     echos "$GR正在退出脚本……$RE"; exit 0 ;;        
     *) 
