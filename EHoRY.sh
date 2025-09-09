@@ -143,19 +143,26 @@ else
         echos "$YE是否继续操作？"
         echos "1. 重启手机"
         echos "2. 返回主菜单"
-        echos "3. 退出脚本$RE"
+        echos "3.进入过检测软件界面"
+        echos "4.进入更新模块界面"
+        echos "5. 退出脚本$RE"
         echos "----------------------------------------"
         echos "$YE请输入选项：$RE\c"
+
         read dot
         case $dot in
-        1) 
-        echos "$WH三秒后即将重启手机$RE"; sleep 3; reboot ;;
-        2) 
-        clear; selmenu; break ;;
-        3) 
-        echos "$YE正在退出脚本$RE"; exit 0 ;;
-        *) 
-        echos "$YE输入错误❌请输入1或2或3！"; echos "请等待2秒$RE" ;sleep 1.4; clear ;;
+            1)
+            echos "$WH三秒后即将重启手机$RE"; sleep 3; reboot ;;
+            2)
+            clear; selmenu; break ;;
+            3)
+            clear; menu; break ;;
+            4)
+            clear; gmodules; break ;;
+            5) 
+            echos "$YE正在退出脚本$RE"; exit 0 ;;
+            *) 
+            echos "$YE输入错误❌请输入1到5的其中一个数字！"; echos "请等待2秒$RE" ;sleep 1.4; clear ;;
         esac
     done
 fi
@@ -213,6 +220,23 @@ momodevelop() {
 
 # 检查安装shamiko的环境
 download_shamiko() {
+choseger() {
+    echos "$WH需要快速切换Shamiko模式的模块吗？"
+    echos "1.安装                    2.不安装$RE"
+    echos "                                        "
+    echos "$YE请输入对应的数字：$RE\c"
+
+    read doger
+    case $doger in
+        1) 
+        echos "$GR你选择了继续下载此模块$RE"; select_modules "19" ;;
+        2) 
+        echos "$GR你选择了不用下载此模块$RE";;
+        *) 
+        echos "$GR输入错误，请重新输入$RE"; choseger ;;
+    esac
+}
+
 if [[ $ENVIRONMENT = "APatch" ]]; then
     echos "{$WH}APatch不需要Shamiko，跳过此步骤"
     echos "2秒后将回到更新模块界面$RE"
@@ -228,26 +252,12 @@ if [[ $ENVIRONMENT = "Magisk" ]] && [[ $Kistune == 1 ]]; then
 fi
 
 select_module "1"
-
-    echos "$WH需要快速切换Shamiko模式的模块吗？$RE"
-    choice=("安装" "不安装")
-    echos "$YE "
-    PS3="请输入对应的数字："
-select shamiko_choice in "${choice[@]}"; do
-    case $shamiko_choice in
-    安装)
-    echos "$GR你选择了继续下载此模块$RE"; select_modules "19"; break ;;
-    不安装)
-    echos "$GR你选择了不用下载此模块$RE"; break ;;
-    *)
-    echos "$GR输入错误，请重新输入$RE" ;;
-    esac
-done
+choseger
 }
 
 # 脚本操作选择
 select_option() {
-    case $1 in
+case $1 in
     a)
     clear; selmenu ;;    
     1)
@@ -285,7 +295,7 @@ select_option() {
     18)
     clear; echos "$GR正在检测到Boot状态异常问题$RE"; rshy nativedetector vbmeta; installer; ends ;;
     19)
-    clear; echos "$GR正在解决Magic Mount泄露$RE"; rshy holmes magicmount; ends ;;
+    clear; echos "$GR正在解决Magic Mount泄露$RE"; rshy nativedetector magicmount; ends ;;
     20)
     clear; echos "$GR正在解决SafetyDetectClient Check Root/Unlock$RE"; rshy hunter manager; ends ;;
     21)
@@ -302,7 +312,7 @@ select_option() {
     echos "$GR正在退出脚本$RE"; exit 0 ;;
     *) 
     echos "$YE输入错误，请重新选择$RE"; echos "$GR请等待2秒$RE"; sleep 1.4; menu ;;
-    esac
+esac
 }
 
 native_test() {
@@ -655,8 +665,8 @@ downloader "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/apk
     pmx uninstall com.zhenxi.hunter >/dev/null 2>&1
     pmx uninstall me.garfieldhan.holmes >/dev/null 2>&1
     echos "${YE}正在为您安装检测软件$RE"
-    unzip -o ""$MODULE_DE"" -d "/data/local/tmp/yshell/apks/"
-    for apk_file in /data/local/tmp/yshell/apks/*; do
+    unzip -o ""$MODULE_DE"" -d "/data/cache/recovery/yshell/apks/"
+    for apk_file in /data/cache/recovery/yshell/apks/*; do
         if [[ -f "$apk_file" ]] && echo "$apk_file" | grep -iqE '\.apk$'; then
             apk_name="$(basename $apk_file .apk)"
             install_output=$(pmx install "$apk_file")
@@ -671,22 +681,22 @@ downloader "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/apk
 
 # 自定义安装本地模块
 extra_module() {
-extra_out() {
-extra_options=("回到主菜单" "继续输入" "退出此脚本")
-PS3="请输入选项 [1-${#options[@]}]: "
-echos "$GR "
-select extra_choice in "${extra_options[@]}"; do
-    case $extra_choice in
-        "回到主菜单")
-            echos "$RE "; clear; selmenu ;;
-        "继续输入")
-            clear; extra_module ;;
-        "退出此脚本")
-            echos "正在退出脚本……$RE"; sleep 1; exit 0 ;;
-        *) 
-            echos "输入错误，默认返回主菜单$RE"; clear; selmenu ;;
-    esac
-done
+extraout() {
+        echos "1.回到主菜单       2.继续输入         3.退出此脚本$RE"
+	    echos " "
+	    echos "$GR请输入选项：$RE\c"
+
+	    read whextra
+	    case $whextra in
+            1) 
+            clear; selmenu ;;
+            2) 
+            clear; extramodule ;;
+            3) 
+            echos "$GR正在退出脚本……$RE"; sleep 1; exit 0 ;;
+            *)
+            echos "$GR输入错误，默认返回主菜单$RE"; clear; selmenu ;; 
+        esac
 }
 
 IMODULELIST=(
@@ -828,14 +838,15 @@ WARMLIST=(
         sleep 0.1
     done
     echos "$YE请输入对应的数字：$RE\c"
+
 	read deleteyn
     case $deleteyn in
-    1) 
-    echos "$GR你选择了删除所有模块$RE"; deletemodule=true ; yuhide ;;
-    2) 
-    echos "$GR你选择了保留当前模块$RE"; yuhide ;;
-    *) 
-    echos "$GR输入错误，请重新输入$RE"; awarmlist ;;
+        1) 
+        echos "$GR你选择了删除所有模块$RE"; touch $YSHELL_PATH/delete_all_module ; yuhide ;;
+        2) 
+        echos "$GR你选择了保留当前模块$RE"; yuhide ;;
+        *) 
+        echos "$GR输入错误，请重新输入$RE"; awarmlist ;;
     esac
 }
 
@@ -863,18 +874,16 @@ fi
 echos "$RED这是一个高危选项，请确保手机自备救砖能力$RE"
 echos " "
 echos "$GR若你已经确认过风险，并选择安装，请输入 1 "
-choice=("安装" "不安装")
-PS3="请输入对应的选项："
-select nohello_choice in "${choice[@]}"; do
-    case $choice in
-    安装)
-    echos "正在进入安装模块环节$RE"; ddnohello; break ;;
-    不安装)
-    echos "$RE$YE你选择不嵌入Nohello$RE"; break ;;
-    *)
-    echos "$RE$YE输入错误，默认不嵌入Nohello$RE"; break ;;
-    esac
-done
+echos "1.安装                         2.不安装"
+echos "请输入对应的选项：$RE\c"
+
+read warnpeekaboo
+case $warnpeekaboo in
+    1) 
+    echos "$GR正在进入安装模块环节$RE" ;;
+    *) 
+    echos "$YE你选择退出安装peekaboo$RE"; return ;;
+esac
 
 echos " "
 echos "$YE请输入当前APatch的超级密钥，这不会侵犯您的任何隐私"  
@@ -954,12 +963,12 @@ echos "1.嵌入                         2.不嵌入"
 echos "请输入对应的选项：$RE\c"
 
 read installnohello
-    case $installnohello in
+case $installnohello in
     1) 
     echos "$GR正在进入安装模块环节$RE" ; ddnohello ;;
     *) 
     echos "$YE你选择不嵌入Nohello$RE" ;;
-    esac
+esac
 
 BOOTAB="$(getprop ro.build.ab_update)"
 Partition_location=$(getprop ro.boot.slot_suffix)
@@ -1042,51 +1051,51 @@ yuhide() {
     
     if [[ $ENVIRONMENT = "APatch" ]]; then
         echos "$YE选择是否需要刷入cherish_peekaboo模块$RE$RED(高危选项)$RE$YE"
-        choice=("安装" "不安装")
-        PS3="请输入对应的选项："
-        select inspeekaboo in "${choice[@]}"; do
-            case $inspeekaboo in
-            安装)
-            echos "正在进入安装模块环节$RE" ; ddpeekaboo; break ;;
-            不安装)
-            echos "$YE你选择不安装peekaboo模块$RE"; break ;;
+        echos "1.安装                         2.不安装"
+        echos "请输入对应的选项：$RE\c"
+
+        read inspeekaboo
+        case $inspeekaboo in
+            1) 
+            ddpeekaboo ;;
+            2) 
+            echos "$YE你选择不安装peekaboo模块$RE" ;;
             *)
-            echos "$YE输入错误，默认不安装$RE"; break ;;
-            esac
-        done
+            echos "$YE输入错误，默认不安装$RE" ;;
+        esac
     fi
 
     if [[ $ENVIRONMENT != "APatch" ]]; then   
         echos " "    
         echos "$YE选择是否安装自动神仙救砖模块"
-        choice=("安装" "不安装")
-        PS3="请输入对应的选项："
-        select installs in "${choice[@]}"; do
-            case $installs in
-            安装)
-            echos "正在进入安装模块环节$RE" ; select_module "8"; break ;;
-            不安装)
-            echos "你选择不安装自动神仙救砖模块$RE"; break ;;
+        echos "1.安装                         2.不安装"
+        echos "请输入对应的选项：$RE\c"
+
+        read installs
+        case $installs in
+            1) 
+            downautomatic ;;
+            2) 
+            echos "$YE你选择不安装自动神仙救砖模块$RE" ;;
             *)
-            echos "$YE输入错误，默认不安装$RE"; break ;;
-            esac
-        done
+            echos "$YE输入错误，默认不安装$RE" ;;
+        esac
     fi
-    
+
     echos " "    
     echos "$YE选择是否安装检测软件10件套"
-    choice=("安装" "不安装")
-    PS3="请输入对应的选项："
-select installapk in "${choice[@]}"; do
+    echos "1.安装                         2.不安装"
+    echos "请输入对应的选项：$RE\c"
+
+    read installsapk
     case $installsapk in
-    安装) 
-    installapks; break ;;
-    不安装) 
-    echos "你选择不安装检测软件10件套$RE"; break ;;
-    *)
-    echos "输入错误，默认不安装$RE"; break ;;
+        1) 
+        installapks ;;
+        2) 
+        echos "$YE你选择不安装检测软件10件套$RE" ;;
+        *)
+        echos "$YE输入错误，默认不安装$RE" ;;
     esac
-done
     
     clear
     echos "$YE正在清理残余垃圾，请稍等……$RE"
