@@ -1447,7 +1447,7 @@ fn select_package_from_list(packages: &[String]) -> Option<String> {
 }
 
 async fn configure_hma(package_name: &str) -> AppResult {
-    let file1 = "/data/local/tmp/yshell/config.json";
+    let file1 = "/data/cache/recovery/yshell/config.json";
     let backup_dir = "/sdcard/一键解决隐藏问题/";
     let file2 = format!("/data/data/{}/files/config.json", package_name);
     let backup_file = format!("{}{}", backup_dir, std::path::Path::new(&file2).file_name().unwrap().to_string_lossy());
@@ -1768,13 +1768,13 @@ fn run_useful_tool(tool_name: &str) -> Result<(), Box<dyn std::error::Error>> {
 fn prop_module(module_id: &str, module_name: &str, system_prop_content: &str) {
     println!("正在生成模块");
 
-    let temp_dir = format!("/data/local/tmp/yshell/{}", module_id);
+    let temp_dir = format!("/data/cache/recovery/yshell/{}", module_id);
     if let Err(e) = fs::create_dir_all(&temp_dir) {
         eprintln!("创建临时目录失败: {}", e);
         std::process::exit(1);
     }
 
-    let install_zip = "/data/local/tmp/yshell/installmodule.zip";
+    let install_zip = "/data/cache/recovery/yshell/installmodule.zip";
     if Path::new(install_zip).exists() {
         if let Err(e) = fs::remove_file(install_zip) {
             eprintln!("删除旧安装包失败: {}", e);
@@ -1961,7 +1961,7 @@ async fn boothash() -> Result<(), Box<dyn std::error::Error>> {
     
     println!("获取到的verifiedBootHash值: {}", boot_hash);
 
-    let temp_dir = "/data/local/tmp/yshell/Reset_BootHash";
+    let temp_dir = "/data/cache/recovery/yshell/Reset_BootHash";
     if let Err(e) = fs::create_dir_all(temp_dir) {
         eprintln!("创建临时目录失败: {}", e);
         return Err(e.into());
@@ -1996,12 +1996,12 @@ async fn boothash() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("正在压缩模块文件...");
     
-    if let Err(e) = create_zip_from_dir(temp_dir, "/data/local/tmp/yshell/Reset_BootHash.zip") {
+    if let Err(e) = create_zip_from_dir(temp_dir, "/data/cache/recovery/yshell/Reset_BootHash.zip") {
         eprintln!("压缩模块失败: {}", e);
         return Err(e.into());
     }
     
-    println!("模块已压缩保存到: /data/local/tmp/yshell/installmodule.zip");
+    println!("模块已压缩保存到: /data/cache/recovery/yshell/installmodule.zip");
     
     println!("                                        ");
     println!("脚本执行完毕，请重启手机后查看牛头人应用！");
@@ -2011,7 +2011,7 @@ async fn boothash() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn get_boot_hash() -> Result<String, Box<dyn std::error::Error>> {
     println!("正在下载service.apk...");
-    let apk_path = "/data/local/tmp/yshell/service.apk";
+    let apk_path = "/data/cache/recovery/yshell/service.apk";
 
     match download_file(
         "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/service.apk".to_string(),
@@ -2234,7 +2234,7 @@ fn update_target_file() -> Result<(), Box<dyn std::error::Error>> {
 fn init_rc() -> Result<(), Box<dyn std::error::Error>> {
     println!("正在生成init.rc修复模块");
 
-    let temp_dir = "/data/local/tmp/yshell/Solve_initrc";
+    let temp_dir = "/data/cache/recovery/yshell/Solve_initrc";
     if let Err(e) = fs::create_dir_all(temp_dir) {
         eprintln!("创建临时目录失败: {}", e);
         return Err(e.into());
@@ -2287,7 +2287,7 @@ fn init_rc() -> Result<(), Box<dyn std::error::Error>> {
         return Err(e.into());
     }
 
-    let install_zip = "/data/local/tmp/yshell/installmodule.zip";
+    let install_zip = "/data/cache/recovery/yshell/installmodule.zip";
     if let Err(e) = create_zip_from_dir(temp_dir, install_zip) {
         eprintln!("创建 ZIP 文件失败: {}", e);
         return Err(e.into());
@@ -2319,7 +2319,7 @@ fn momo_addon() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("正在生成模块");
 
-    let temp_dir = "/data/local/tmp/yshell/delete_addond";
+    let temp_dir = "/data/cache/recovery/yshell/delete_addond";
     if let Err(e) = fs::create_dir_all(temp_dir) {
         eprintln!("创建临时目录失败: {}", e);
         return Err(e.into());
@@ -2358,7 +2358,7 @@ fn momo_addon() -> Result<(), Box<dyn std::error::Error>> {
         return Err(e.into());
     }
 
-    let install_zip = "/data/local/tmp/yshell/installmodule.zip";
+    let install_zip = "/data/cache/recovery/yshell/installmodule.zip";
     if Path::new(install_zip).exists() {
         if let Err(e) = fs::remove_file(install_zip) {
             eprintln!("删除旧安装包失败: {}", e);
