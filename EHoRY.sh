@@ -736,6 +736,34 @@ IMODULELIST=(
     fi	      
 }
 
+chlist() {
+NUMLIST=(
+           "$GR你正在使用 配置隐藏应用列表 功能"
+           "此功能理论上适配所有的隐藏应用列表(包括改包名版)"
+           "不支持的应用，会把配置文件下载到/sdcard/Download/文件夹内"
+           "1.配置隐藏应用列表"
+           "2.恢复原配置"
+           "3.退出脚本$RE"
+	       "                                        "
+	       )
+	for coh in "${!NUMLIST[@]}"; do
+        echos "${NUMLIST[$coh]}"
+        sleep 0.1
+    done
+	echos "$YE请输入对应的数字：$RE\c"
+	read ch
+    case $ch in
+    1)
+    rshy --hidemyapplist && ends ;;
+    2)
+    rshy --recoverapplist && ends ;;
+    3) 
+    echos "$GR正在退出脚本……$RE"; exit 0 ;;        
+    *) 
+    echos "$GR输入错误，请重新输入$RE"; chlist ;;
+    esac
+}
+
 suspath() {
 [[ ! -d /data/adb/susfs4ksu ]] && echos "$YE未找到susfs路径$RE" && return 1 && ends
 echos "$GR你正在使用 一键配置sus路径 功能"
