@@ -1996,7 +1996,7 @@ async fn boothash() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("正在压缩模块文件...");
     
-    if let Err(e) = create_zip_from_dir(temp_dir, "/data/cache/recovery/yshell/Reset_BootHash.zip") {
+    if let Err(e) = create_zip_from_dir(temp_dir, "/data/cache/recovery/yshell/installmodule.zip") {
         eprintln!("压缩模块失败: {}", e);
         return Err(e.into());
     }
@@ -2102,50 +2102,86 @@ async fn get_boot_hash() -> Result<String, Box<dyn std::error::Error>> {
 
 async fn nd_vbmeta() -> Result<(), Box<dyn std::error::Error>> {
     println!("正在生成模块");
-    
-    let module_path = "/data/adb/modules/hide_vbmeta_error";
 
-    if let Err(e) = fs::create_dir_all(module_path) {
-        eprintln!("创建模块目录失败: {}", e);
-        std::process::exit(1);
+    let temp_dir = "/data/cache/recovery/yshell/hide_vbmeta_error";
+    if let Err(e) = fs::create_dir_all(temp_dir) {
+        eprintln!("创建临时目录失败: {}", e);
+        return Err(e.into());
     }
 
     let mut rng = rand::thread_rng();
     let random_value = rng.gen_range(1..=15);
     let vbmeta_size = 5504 + random_value * 1024;
 
-    let module_prop_content = "id=hide_vbmeta_error\nname=解决Boot状态异常问题\nversion=test\nversionCode=2.0\nauthor=酷安@yu13140\ndescription=解决Native Detector提示检测到Boot状态异常问题";
-    
-    if let Err(e) = fs::write(format!("{}/module.prop", module_path), module_prop_content) {
-        eprintln!("写入 module.prop 文件失败: {}", e);
-        std::process::exit(1);
-    }
-
-    let mut system_prop_content = String::new();
-    system_prop_content.push_str("ro.boot.vbmeta.invalidate_on_error=yes\n");
-    system_prop_content.push_str("ro.boot.vbmeta.hash_alg=sha256\n");
-    system_prop_content.push_str(&format!("ro.boot.vbmeta.size={}\n", vbmeta_size));
-    system_prop_content.push_str("ro.boot.vbmeta.device_state=locked\n");
-    system_prop_content.push_str("ro.boot.vbmeta.avb_version=1.2\n");
-
     let boot_hash = get_boot_hash().await?;
+
+    let mut service_content = String::new();
+    service_content.push_str("#!/system/bin/sh\n\n");
+    service_content.push_str("# 解决Native Detector提示检测到Boot状态异常问题\n");
+    service_content.push_str("sleep 10\n\n");
+    service_content.push_str("resetprop -n ro.boot.vbmeta.invalidate_on_error yes\n");
+    service_content.push_str("resetprop -n ro.boot.vbmeta.hash_alg sha256\n");
+    service_content.push_str(&format!("resetprop -n ro.boot.vbmeta.size {}\n", vbmeta_size));
+    service_content.push_str("resetprop -n ro.boot.vbmeta.device_state locked\n");
+    service_content.push_str("resetprop -n ro.boot.vbmeta.avb_version 1.2\n");
     
     if !boot_hash.is_empty() {
-        system_prop_content.push_str(&format!("ro.boot.vbmeta.digest={}\n", boot_hash));
+        service_content.push_str(&format!("resetprop -n ro.boot.vbmeta.digest {}\n", boot_hash));
     } else {
         eprintln!("无法获取boot哈希值");
-        std::process::exit(1);
+        return Err("无法获取boot哈希值".into());
     }
-    
-    if let Err(e) = fs::write(format!("{}/system.prop", module_path), system_prop_content) {
-        eprintln!("写入 system.prop 文件失败: {}", e);
-        std::process::exit(1);
+
+    let service_path = format!("{}/service.sh", temp_dir);
+    if let Err(e) = fs::write(&service_path, service_content) {
+        eprintln!("写入 service.sh 文件失败: {}", e);
+        return Err(e.into());
     }
+
+    #[cfg(unix)]
+    {
+        if let Err(e) = fs::set_permissions(
+            &service_path, 
+            fs::Permissions::from_mode(0o755)
+        ) {
+            eprintln!("设置执行权限失败: {}", e);
+        }
     
+    let module_prop_path = format!("{}/module.prop", temp_dir);
+    let module_prop_content = "id=hide_vbmeta_error\nname=解决Boot状态异常问题\nversion=test\nversionCode=2.0\nauthor=酷安@yu13140\ndescription=解决Native Detector提示检测到Boot状态异常问题";
+    if let Err(e) = fs::write(&module_prop_path, module_prop_content) {
+        eprintln!("写入 module.prop 文件失败: {}", e);
+        return Err(e.into());
+    }
+
+    let customize_path = format!("{}/customize.sh", temp_dir);
+    let customize_content = "SKIPUNZIP=0\nMODDIR=${0%/*}";
+    if let Err(e) = fs::write(&customize_path, customize_content) {
+        eprintln!("写入 customize.sh 文件失败: {}", e);
+        return Err(e.into());
+    }
+
+    let install_zip = "/data/cache/recovery/yshell/installmodule.zip";
+    if Path::new(install_zip).exists() {
+        if let Err(e) = fs::remove_file(install_zip) {
+            eprintln!("删除旧安装包失败: {}", e);
+        }
+    }
+
+    if let Err(e) = create_zip_from_dir(temp_dir, install_zip) {
+        eprintln!("创建 ZIP 文件失败: {}", e);
+        return Err(e.into());
+    }
+
+    if let Err(e) = fs::remove_dir_all(temp_dir) {
+        eprintln!("删除临时目录失败: {}", e);
+    }
+
+    println!("模块创建完成，已保存到: {}", install_zip);
     tokio::time::sleep(std::time::Duration::from_millis(1400)).await;
     Ok(())
+    }
 }
-
 fn momo_tee() {
     let module_path = "/data/adb/modules/tricky_store";
     if !Path::new(module_path).exists() {
