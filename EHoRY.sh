@@ -132,7 +132,9 @@ echos() { echo -e "$@"; }
 
 # 处理函数带来的的结果
 ends() {
-if [[ $? -ne 0 ]]; then
+[[ -f $YSHELL_PATH/error ]] && ER=1 && rm -f $YSHELL_PATH/error
+
+if [[ $? -ne 0 ]] || [[ $ER = 1 ]]; then
     echos "$WH可能有问题出现咯，请截图下来私信酷安@yu13140$RE"
     exit 0
 else
@@ -775,13 +777,14 @@ NUMLIST=(
 }
 
 suspath() {
-[[ ! -d /data/adb/susfs4ksu ]] && echos "$YE未找到susfs路径$RE" && return 1 && ends
+[[ ! -d /data/adb/ksu/susfs4ksu ]] && echos "$YE未找到susfs路径$RE" && return 1 && ends
 echos "$GR你正在使用 一键配置sus路径 功能"
 echos "感谢酷安@幽影WF的一键配置sus路径脚本"
 echos "正在下载必要文件……$RE"
 MODULE_DE="$YSHELL_PATH/Script.sh"
-downloader "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/Script.sh" "f519c867b8a8bc0611a345033c58ddc80ec4271b233cbfb0dde725310c49d6b6"
-sh $MODULE_DE
+downloader "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/Script.sh"
+chmod 755 $MODULE_DE
+./$MODULE_DE
 MODULE_DE="$YSHELL_PATH/installmodule.zip"
 }
 
