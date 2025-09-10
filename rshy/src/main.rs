@@ -90,7 +90,7 @@ async fn handle_command(args: &[String]) -> AppResult {
 }
 
 fn show_version() -> AppResult {
-    println!("v5.0");
+    println!("v5.0.1");
     Ok(())
 }
 
@@ -1025,9 +1025,20 @@ async fn download_file(
     save_path: Option<std::path::PathBuf>,
     expected_hash: Option<String>,
 ) -> AppResult<String> {
-    if is_vpn_active() {
-        println!("检测到VPN已启用，将不使用CDN加速");
-        use_cdn = false;
+    let vpn_detected = is_vpn_active();
+    
+    if vpn_detected {
+        println!("检测到VPN可能已被开启，是否继续使用CDN加速？(y/N): ");
+        io::stdout().flush()?;
+        let mut input = String::new();
+        io::stdin().read_line(&mut input)?;
+        
+        if input.trim().eq_ignore_ascii_case("y") {
+            println!("将继续使用CDN加速");
+        } else {
+            println!("将不使用CDN加速");
+            use_cdn = false;
+        }
     }
 
     let client = Client::new();
@@ -1110,16 +1121,18 @@ async fn download_file(
 }
 
 fn is_vpn_active() -> bool {
+    println!("正在检查VPN状态...");
+    
     let output = Command::new("sh")
         .arg("-c")
-        .arg("ip addr | grep -qE 'tun[0-9]|ppp[0-9]|wg[0-9]' && echo 'VPN_ACTIVE'")
+        .arg("ip addr | grep -E 'tun[0-9]|ppp[0-9]|wg[0-9]' | head -1")
         .output();
 
     if let Ok(output) = output {
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
-            if stdout.contains("VPN_ACTIVE") {
-                println!("检测到VPN网络接口，将不使用CDN加速");
+            if !stdout.trim().is_empty() {
+                println!("检测到VPN网络接口: {}", stdout);
                 return true;
             }
         }
@@ -1127,14 +1140,14 @@ fn is_vpn_active() -> bool {
 
     let output = Command::new("sh")
         .arg("-c")
-        .arg("ip route | grep -q 'tun\\|ppp\\|wg' && echo 'VPN_ROUTE'")
+        .arg("ip route | grep -E 'tun|ppp|wg' | head -1")
         .output();
 
     if let Ok(output) = output {
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
-            if stdout.contains("VPN_ROUTE") {
-                println!("检测到VPN路由，将不使用CDN加速");
+            if !stdout.trim().is_empty() {
+                println!("检测到VPN路由: {}", stdout);
                 return true;
             }
         }
@@ -1153,12 +1166,13 @@ fn is_vpn_active() -> bool {
 
         if let Ok(output) = output {
             if output.status.success() {
-                println!("检测到VPN进程 {}，将不使用CDN加速", process);
+                println!("检测到VPN进程: {}", process);
                 return true;
             }
         }
     }
 
+    println!("未检测到VPN活动");
     false
 }
 
@@ -1448,9 +1462,9 @@ fn select_package_from_list(packages: &[String]) -> Option<String> {
 
 async fn configure_hma(package_name: &str) -> AppResult {
     let file1 = "/data/cache/recovery/yshell/config.json";
-    let backup_dir = "/sdcard/一键解决隐藏问题/";
     let file2 = format!("/data/data/{}/files/config.json", package_name);
-    let backup_file = format!("{}{}", backup_dir, std::path::Path::new(&file2).file_name().unwrap().to_string_lossy());
+
+    fs::create_dir_all("/data/cache/recovery/yshell/")?;
 
     download_file(
         "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/config.json".to_string(),
@@ -1459,27 +1473,41 @@ async fn configure_hma(package_name: &str) -> AppResult {
         Some("b97c517369300d1c073cc4f49a0117912ee540f24161b2df306ed0e9f88fd426".to_string()),
     ).await?;
 
-    fs::create_dir_all(backup_dir)?;
-
-    if Path::new(&file2).exists() {
-        fs::copy(&file2, &backup_file)?;
-        println!("备份完成: 已将原配置文件备份到{}", backup_dir);
-    } else {
-        println!("警告: 原配置文件不存在，跳过备份");
+    if !Path::new(&file2).exists() {
+        println!("未找到原配置文件，将配置文件下载到/sdcard/Download目录");
+        return download_config_to_sdcard().await;
     }
 
-    fs::copy(file1, &file2)?;
-    println!("配置已完成");
-    fs::remove_file(file1)?;
-    
-    Ok(())
+    let new_config_content = match fs::read_to_string(file1) {
+        Ok(content) => content,
+        Err(e) => {
+            eprintln!("读取下载的配置文件失败: {}", e);
+            return download_config_to_sdcard().await;
+        }
+    };
+
+    match fs::write(&file2, new_config_content) {
+        Ok(_) => {
+            println!("配置文件已成功更新");
+
+            if let Err(e) = fs::remove_file(file1) {
+                eprintln!("删除临时文件失败: {}", e);
+            }
+            
+            Ok(())
+        },
+        Err(e) => {
+            eprintln!("写入原配置文件失败: {}", e);
+            download_config_to_sdcard().await
+        }
+    }
 }
 
 async fn download_config_to_sdcard() -> AppResult {
     println!("下载下来的配置文件将存放在/sdcard/Download/文件夹里");
     println!("需要您手动到隐藏应用列表里点击还原配置");
 
-    let file1 = "/sdcard/Download/配置隐藏应用列表.json";
+    let file1 = "/sdcard/Download/隐藏应用列表配置.json";
     let config_hash = "b97c517369300d1c073cc4f49a0117912ee540f24161b2df306ed0e9f88fd426";
     
     download_file(
@@ -1489,7 +1517,7 @@ async fn download_config_to_sdcard() -> AppResult {
         Some(config_hash.to_string()),
     ).await?;
     
-    println!("已将配置文件保存在 /sdcard/Download/ 中");
+    println!("已将配置文件保存在 /sdcard/Download/隐藏应用列表配置.json 中");
     Ok(())
 }
 
@@ -1602,25 +1630,28 @@ fn get_package_name_from_uid(uid: &str) -> Option<String> {
         Ok(output) => {
             if output.status.success() {
                 let output_str = String::from_utf8_lossy(&output.stdout);
-                println!("uid输出: {} {}", uid, output_str);
+                println!("uid输出: {}", output_str);
                 
                 for line in output_str.lines() {
                     if line.starts_with("package:") {
-                        let package_name = line.replace("package:", "").trim().to_string();
-                        println!("找到包名: {}", package_name);
-                        return Some(package_name);
+                        let package_line = line.replace("package:", "");
+                        let package_name = package_line.split_whitespace().next().unwrap_or("").to_string();
+                        if !package_name.is_empty() {
+                            println!("找到包名: {}", package_name);
+                            return Some(package_name);
+                        }
                     }
                 }
                 
-                eprintln!("输出中没有找到包名");
+                eprintln!("输出中没有找到有效的包名");
             } else {
                 let error_msg = String::from_utf8_lossy(&output.stderr);
-                eprintln!("执行命令失败: {} {}", uid, error_msg);
+                eprintln!("执行命令失败: {}", error_msg);
             }
             None
         },
         Err(e) => {
-            eprintln!("执行命令失败: {} {}", uid, e);
+            eprintln!("执行命令失败: {}", e);
             None
         },
     }

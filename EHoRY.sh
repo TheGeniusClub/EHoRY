@@ -1206,8 +1206,10 @@ update() {
 local_version=$(rshy --version | tr -d '[:space:]')
 remote_version=$(rshy --update | tr -d '[:space:]')
 
+[[ -z $remote_version ]] && echos "$YE当前网速差，不能从云端获取版本号！$RE"
+
 if [[ "$remote_version" != "$local_version" ]]; then
-    echos "$WH有新版本可以更新！"
+    echos "$WH有新版本：${remote_version} 可以更新！"
     echos "网盘更新地址：https://www.123684.com/s/Wq68jv-Fec4?"
     echos "提取码：rn1C$RE"
     exit 0
