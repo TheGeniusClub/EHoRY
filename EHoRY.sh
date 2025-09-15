@@ -96,13 +96,21 @@ downloader() {
 ip addr | grep -qE 'tun[0-9]|ppp[0-9]'
 if [[ $? -ne 0 ]]; then
     echos "$YE检测到VPN可能已被开启，不使用CDN进行加速。$RE"
-    rshy --download "$1" "$MODULE_DE" "$2" --no-cdn
+    if [[ -z $2 ]]; then
+        rshy --download "$1" "$MODULE_DE" --no-cdn
+    else
+        rshy --download "$1" "$MODULE_DE" "$2" --no-cdn
+    fi
 else
-    rshy --download "$1" "$MODULE_DE" "$2"
+    if [[ -z $2 ]]; then
+        rshy --download "$1" "$MODULE_DE" --no-cdn
+    else
+        rshy --download "$1" "$MODULE_DE" "$2"
+    fi
 fi
 }
 download_module() { rshy --download "$1" "$MODULE_DE" "$2" --no-cdn ; }
-pmx() { rhsy --tools cmd package $1 $2 ; }
+pmx() { rshy --tools cmd package $1 $2 ; }
 
 detect_magisk() {
 if [[ $ENVIRONMENT = "Magisk" ]]; then
@@ -257,6 +265,13 @@ select_module "1"
 choseger
 }
 
+downopenselinux() {
+murl="https://lz.qaiu.top/d/lz/iXBKa368frid"
+mhash="1911ddfdd0262f85ff24dbd03aab0d64e83a68a580ce7993d6b78017a761b183"
+download_module "$murl" "$mhash"
+installer
+}
+
 # 脚本操作选择
 select_option() {
 case $1 in
@@ -288,10 +303,12 @@ case $1 in
     clear; echos "$GR正在解决Miscellaneous Check (a)$RE"; rshy holmes somethingwrong; ends ;;
     13)
     clear; echos "$GR正在解决Something Wrong$RE"; rshy holmes somethingwrong; ends ;;
-    15)
+    14)
     clear; echos "$GR正在解决哈希值问题$RE"; rshy nativetest boothash; ends ;;
-    16)
+    15)
     clear; echos "$GR正在解决Miscellaneous Check (2)$RE"; rshy initrc; ends ;;
+    16)
+    clear; echos "$GR正在解决Found Injection (9ff)$RE"; rshy holmes 9ff; ends ;;
     17)
     clear; echos "$GR正在解决Detected LSPosed (5)$RE"; rshy nativedetector lsp5; ends ;;
     18)
@@ -384,7 +401,7 @@ Momos=(
         3) 
         clear; echos "$GR解决 处于调试环境 问题$RE"; rshy momo development; installer; ends ;;
         4) 
-        clear; echos "$GR正在为SElinux切换至默认模式$RE"; downlockselinux; ends ;;
+        clear; echos "$GR正在为SElinux切换至默认模式$RE"; downopenselinux; ends ;;
         5) 
         clear; echos "$GR正在解决 非SDK接口的限制失效 问题$RE"; rshy momo sdk; ends ;;
         6) 
@@ -459,7 +476,7 @@ MODULELS=(
         "7.Tricky Store OSS v2.1.0 (41)"
         "8.LSPosed v1.9.2-it (7404)"
         "9.LSPosed-JingMatrix v1.10.1 (7189)"
-        "10.LSPosed-Irena 1.9.2 (7280)"
+        "10.LSPosed-Irena 1.9.2 (7281)"
         "11.PlayIntegrityFork-v14"
         "12.Play Integrity Fix [INJECT] v4.3"
         "13.TS Enhancer Extreme v0.8.1-Beta"
@@ -492,12 +509,12 @@ case $1 in
     2) mhash="3c91deee8b8359fc2b4d115939b4f993e0d34c38b41bf7cc2ae7db29d79d3638" ;;
     3) mhash="a404e3cf4722b6d73e4fbafc0e2b6c3aabbb96dd1340c43f6ebf0a38e9301dab" ;;
     4) mhash="d38a4d0176327ec990c8993bbed84c1bd28820d98443541b40df04fb0d3c3f70" ;;
-    5) mhash="0d7dcb852e381289c59175f424fb363994d2ec8b392068be7ede75c035270d88" ;;
+    5) mhash="553f54627f5ae277c35d506ac684148bc85d31b7ba8daf33d29770e22a5e5271" ;;
     6) mhash="ce2934946dabc094697ef1f573e4a08d60bb2708f560f74095f33f7b60bf2a8c" ;;
     7) mhash="b7b564fae5d0e70dc9bf61c1bab6caa84370304166b8baf96d73537d84a648c8" ;;
     8) mhash="077de7c528b9721259ade7640c457dc8a05c4e8c147444e9ee1ea8d5a5f45775" ;;
     9) mhash="25529045d8ab4e4ab8fd5a97685d8ace1e2322374c1666028a6c10fb5cbc498d" ;;
-    10) mhash="5bd7411d5da953f0e7b96566749a8247703ac6d6e74846ee45d0fd35bc93a51d" ;;
+    10) mhash="ade3ec2550ecdd67956e128656ca15ae38b5dcb20aa05a7a34fd0f04491a46e8" ;;
     11) mhash="b75bacf7a9d169d797af13eba3ac0252d3c406b175c7b187d882296e0f7cde89" ;;
     12) mhash="72e51d12d7f3df0516b4e4396b1a24ab1bdc90799d447e22cc4572939afcd718" ;;
     13) mhash="03ef0c4b24a384afbb40aaa1578d084853ad617c174a9f40e244ae60114bbb9f" ;;
@@ -520,7 +537,7 @@ case $1 in
     2) share_key="iQvYb351icte" ;;
     3) share_key="iBd9q35b57sf" ;;
     4) share_key="inl0b351ibze" ;;
-    5) share_key="indk5351ibba" ;;
+    5) share_key="iknEl368gyib" ;;
     6) share_key="iIt88351ic7c" ;;
     7) share_key="ibCGy353muze" ;;
     8) share_key="ikoL2351ib0j" ;;
@@ -549,6 +566,7 @@ module_hash "$1"
 module_url "$1"
 download_module "$murl" "$mhash"
 installer
+ends
 }
 case $1 in
     a)
@@ -556,9 +574,9 @@ case $1 in
     1)
     clear; echos "$GR正在下载Shamiko$RE"; download_shamiko; ends ;;
     [2-3] | 5)
-    clear; detect_magisk; echos "$GR正在下载Zygisk模块$RE"; module_info "$1"; ends ;;    
+    clear; detect_magisk; echos "$GR正在下载Zygisk模块$RE"; module_info "$1" ;;    
     [3-4] | [6-21] | 23)
-    clear; echos "$GR正在下载模块$RE"; module_info "$1"; ends ;;
+    clear; echos "$GR正在下载模块$RE"; module_info "$1" ;;
     22)
     clear; ddpeekaboo; ends ;;
     f)
@@ -620,9 +638,9 @@ MENU=(
        "————————————————————————————————————————————————"
         " "
         "$WH每日一言："
-        $yiyan$RE
+        "${yiyan}${RE}"
         "${YE}AUTHOR：酷安@yu13140$RE"
-        "$YE当前脚本的版本号为：$SCRIPT_VERSION$RE"        
+        "$YE当前脚本的版本号为：$SCRIPT_VERSION$RE"
         "$MANAGER"
         " "
         "$GR请选择你需要使用的功能"
@@ -657,7 +675,7 @@ MENU=(
 installapks() {
 echos " "
 echos "$YE正在下载必要文件中$RE"
-downloader "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/apk.zip" "5bce4897a8a438c4319a44e750c2d69128400d12eb3daef7adece0fcb5fe5573"
+downloader "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/apk.zip" "ee7a5817d009d6ee9ceaa527fe69b5e9d95694c9332feca4aa62f3012db2f5bd"
     
     sleep 0.1
     echos "                                        "
@@ -670,12 +688,12 @@ downloader "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/apk
     unzip -o ""$MODULE_DE"" -d "/data/cache/recovery/yshell/apks/"
     for apk_file in /data/cache/recovery/yshell/apks/*; do
         if [[ -f "$apk_file" ]] && echo "$apk_file" | grep -iqE '\.apk$'; then
-            apk_name="$(basename $apk_file .apk)"
+            apk_name="$(basename "$apk_file" .apk)"
             install_output=$(pmx install "$apk_file")
             if echo "$install_output" | grep -iq "Success"; then
-                echos "$WH$apk_name安装完成$RE"
+                echos "$WH${apk_name}安装完成$RE"
             else
-                echos "$WH$apk_name安装失败"
+                echos "$WH${apk_name}安装失败"
             fi
         fi
     done
@@ -777,14 +795,13 @@ NUMLIST=(
 }
 
 suspath() {
-[[ ! -d /data/adb/ksu/susfs4ksu ]] && echos "$YE未找到susfs路径$RE" && return 1 && ends
 echos "$GR你正在使用 一键配置sus路径 功能"
 echos "感谢酷安@幽影WF的一键配置sus路径脚本"
 echos "正在下载必要文件……$RE"
 MODULE_DE="$YSHELL_PATH/Script.sh"
 downloader "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/Script.sh"
 chmod 755 $MODULE_DE
-./$MODULE_DE
+(sh $MODULE_DE)
 MODULE_DE="$YSHELL_PATH/installmodule.zip"
 }
 
@@ -1049,7 +1066,7 @@ yuhide() {
         murl="https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/ARMIAS.zip"
     fi
     rshy --download $murl $MODULE_DE
-    rshy --nativetest boothash
+    rshy nativetest boothash
     installer
     
     if [[ $ENVIRONMENT = "APatch" ]]; then
@@ -1077,7 +1094,7 @@ yuhide() {
         read installs
         case $installs in
             1) 
-            downautomatic ;;
+            select_modules "20" ;;
             2) 
             echos "$YE你选择不安装自动神仙救砖模块$RE" ;;
             *)

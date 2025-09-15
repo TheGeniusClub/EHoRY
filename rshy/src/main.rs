@@ -35,7 +35,14 @@ async fn main() -> AppResult {
         return Err("参数不足".into());
     }
 
-    handle_command(&args).await
+    match handle_command(&args).await {
+        Ok(()) => {
+            std::process::exit(0);
+        },
+        Err(_) => {
+            std::process::exit(1);
+        }
+    }
 }
 
 async fn handle_command(args: &[String]) -> AppResult {
@@ -90,7 +97,7 @@ async fn handle_command(args: &[String]) -> AppResult {
 }
 
 fn show_version() -> AppResult {
-    println!("v5.0.2");
+    println!("v5.0.4");
     Ok(())
 }
 
@@ -559,7 +566,7 @@ async fn show_yiyan() -> Result<(), Box<dyn std::error::Error>> {
     
     let word = json["hitokoto"].as_str().unwrap_or("");
     let from = json["from"].as_str().unwrap_or("");
-    
+
     let mut show = word.to_string();
     
     fn is_ok(s: &str) -> bool {
@@ -1477,14 +1484,20 @@ async fn configure_hma(package_name: &str) -> AppResult {
     let file1 = "/data/cache/recovery/yshell/config.json";
     let file2 = format!("/data/data/{}/files/config.json", package_name);
 
-    fs::create_dir_all("/data/cache/recovery/yshell/")?;
+    if let Err(e) = fs::create_dir_all("/data/cache/recovery/yshell/") {
+        eprintln!("创建目录失败: {}", e);
+        return download_config_to_sdcard().await;
+    }
 
-    download_file(
+    if let Err(e) = download_file(
         "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/config.json".to_string(),
         true,
         Some(std::path::PathBuf::from(file1)),
-        Some("b97c517369300d1c073cc4f49a0117912ee540f24161b2df306ed0e9f88fd426".to_string()),
-    ).await?;
+        Some("4c8cf66c0f3d6359ab28562b04697440f78fc96db5043191fb9e28d083860a9c".to_string()),
+    ).await {
+        eprintln!("下载配置文件失败: {}", e);
+        return download_config_to_sdcard().await;
+    }
 
     if !Path::new(&file2).exists() {
         println!("未找到原配置文件，将配置文件下载到/sdcard/Download目录");
@@ -1499,21 +1512,18 @@ async fn configure_hma(package_name: &str) -> AppResult {
         }
     };
 
-    match fs::write(&file2, new_config_content) {
-        Ok(_) => {
-            println!("配置文件已成功更新");
-
-            if let Err(e) = fs::remove_file(file1) {
-                eprintln!("删除临时文件失败: {}", e);
-            }
-            
-            Ok(())
-        },
-        Err(e) => {
-            eprintln!("写入原配置文件失败: {}", e);
-            download_config_to_sdcard().await
-        }
+    if let Err(e) = fs::write(&file2, new_config_content) {
+        eprintln!("写入原配置文件失败: {}", e);
+        return download_config_to_sdcard().await;
     }
+
+    println!("配置文件已成功更新");
+
+    if let Err(e) = fs::remove_file(file1) {
+        eprintln!("删除临时文件失败: {}", e);
+    }
+    
+    Ok(())
 }
 
 async fn download_config_to_sdcard() -> AppResult {
@@ -1713,34 +1723,64 @@ fn deleter(delete_type: &str, path: &str, recursive: bool) -> AppResult {
     match delete_type {
         "file" => {
             if Path::new(path).exists() {
-                fs::remove_file(path)?;
+                if let Err(e) = fs::remove_file(path) {
+                    eprintln!("删除文件 {} 失败: {}", path, e);
+                    return Err(e.into());
+                }
                 println!("已删除文件: {}", path);
+            } else {
+                println!("文件不存在，无需删除: {}", path);
             }
         },
         "dir" => {
             if Path::new(path).exists() {
-                fs::remove_dir_all(path)?;
+                if let Err(e) = fs::remove_dir_all(path) {
+                    eprintln!("删除目录 {} 失败: {}", path, e);
+                    return Err(e.into());
+                }
                 println!("已删除目录: {}", path);
+            } else {
+                println!("目录不存在，无需删除: {}", path);
             }
         },
         "all" => {
             if Path::new(path).exists() && Path::new(path).is_dir() {
-                let entries = fs::read_dir(path)?;
-                let mut deleted_count = 0;
+                let entries = match fs::read_dir(path) {
+                    Ok(entries) => entries,
+                    Err(e) => {
+                        eprintln!("读取目录 {} 失败: {}", path, e);
+                        return Err(e.into());
+                    }
+                };
                 
+                let mut deleted_count = 0;
                 for entry in entries {
-                    let entry = entry?;
+                    let entry = match entry {
+                        Ok(entry) => entry,
+                        Err(e) => {
+                            eprintln!("读取目录项失败: {}", e);
+                            continue;
+                        }
+                    };
                     let entry_path = entry.path();
                     
                     if entry_path.is_file() {
-                        fs::remove_file(&entry_path)?;
-                        deleted_count += 1;
+                        if let Err(e) = fs::remove_file(&entry_path) {
+                            eprintln!("删除文件 {} 失败: {}", entry_path.display(), e);
+                        } else {
+                            deleted_count += 1;
+                        }
                     } else if entry_path.is_dir() && recursive {
-                        fs::remove_dir_all(&entry_path)?;
-                        deleted_count += 1;
+                        if let Err(e) = fs::remove_dir_all(&entry_path) {
+                            eprintln!("删除目录 {} 失败: {}", entry_path.display(), e);
+                        } else {
+                            deleted_count += 1;
+                        }
                     }
                 }
                 println!("已从 {} 中删除 {} 个项目", path, deleted_count);
+            } else {
+                println!("目录不存在或不是目录，无需删除: {}", path);
             }
         },
         _ => {
