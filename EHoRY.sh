@@ -132,7 +132,9 @@ case $ENVIRONMENT in
     KernelSU | SukiSU) /data/adb/ksud module install "$MODULE_DE" ;;
 esac
 [[ -f $MODULE_DE ]] && rm -f $MODULE_DE
-[[ $# -eq 1 ]] && MODULE_DE="$YSHELL_PATH/installmodule.zip"
+if [[ $# -eq 1 ]]; then
+    MODULE_DE="$YSHELL_PATH/installmodule.zip"
+fi
 }
 
 # 简化输出
