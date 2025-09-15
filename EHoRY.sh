@@ -131,8 +131,8 @@ case $ENVIRONMENT in
     APatch) /data/adb/apd module install "$MODULE_DE" ;;
     KernelSU | SukiSU) /data/adb/ksud module install "$MODULE_DE" ;;
 esac
-rm -f $MODULE_DE
-MODULE_DE="$YSHELL_PATH/installmodule.zip"
+[[ -f $MODULE_DE ]] && rm -f $MODULE_DE
+[[ $# -eq 1 ]] && MODULE_DE="$YSHELL_PATH/installmodule.zip"
 }
 
 # 简化输出
@@ -140,9 +140,7 @@ echos() { echo -e "$@"; }
 
 # 处理函数带来的的结果
 ends() {
-[[ -f $YSHELL_PATH/error ]] && ER=1 && rm -f $YSHELL_PATH/error
-
-if [[ $? -ne 0 ]] || [[ $ER = 1 ]]; then
+if [[ $? -ne 0 ]]; then
     echos "$WH可能有问题出现咯，请截图下来私信酷安@yu13140$RE"
     exit 0
 else

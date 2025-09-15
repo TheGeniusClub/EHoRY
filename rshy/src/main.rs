@@ -338,20 +338,7 @@ fn integrity_check(file_path: &str, expected_hash: &str) -> AppResult {
         eprintln!("sha256完整性校验未通过");
         eprintln!("请检查文件是否已经下载100%");
         eprintln!("如果未发现其他问题，请私信@yu13140报告此错误");
-
-        let error_dir = "/data/cache/recovery/yshell";
-        if let Err(e) = fs::create_dir_all(error_dir) {
-            eprintln!("创建错误目录失败: {}", e);
-        } else {
-            let error_file = format!("{}/error", error_dir);
-            if let Err(e) = File::create(&error_file) {
-                eprintln!("创建错误文件失败: {}", e);
-            } else {
-                eprintln!("已创建错误文件");
-            }
-        }
-        
-        Err("完整性校验失败".into())
+        std::process::exit(1);
     }
 }
 
