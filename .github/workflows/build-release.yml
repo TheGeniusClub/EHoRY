@@ -1,0 +1,71 @@
+name: Build and Release
+
+permissions:
+  contents: write
+  actions: write
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: "Build EHoRY"
+    uses: ./.github/workflows/build.yml
+
+  release:
+    name: "Release EHoRY"
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: ./artifacts
+
+      - name: Setup Git
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Generate New Tag
+        id: tag_generation
+        run: |
+          NEW_TAG="v5.1"
+          echo "New tag: $NEW_TAG"
+          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+
+      - name: Create Git Tag
+        run: |
+          git tag ${{ env.NEW_TAG }}
+          git push origin ${{ env.NEW_TAG }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: yu13140/EHoRY
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ env.NEW_TAG }}
+          name: ${{ env.NEW_TAG }}
+          files: |
+            artifacts/**/*
+          body: |
+            Automated release for EHoRY
+            
+            - Build Date: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+            - Commit: ${{ github.sha }}
+            - Built for: aarch64-linux-android
+            
+            [Update Log](https://github.com/TheGeniusClub/EHoRY/blob/master/update_log.md)
+
+      - name: Display Release Info
+        run: |
+          echo "🎉 Release ${{ env.NEW_TAG }} created successfully!"
+          echo "📦 Artifacts uploaded:"
+          find ./artifacts -type f -exec echo "  - {}" \;
