@@ -1,11 +1,11 @@
 # EHoRY
 
-##### A comprehensive tool to hide root status and bypass detection on Android devices.
+#### A comprehensive tool to hide root status and bypass detection on Android devices.
 
-[简体中文](readme.md) | [English](readme_en.md)
+[简体中文](readme.md) | **English**
 
 ![](https://img.shields.io/badge/Platform-Android-green?logo=Android&style=for-the-badge)  
-[![](https://img.shields.io/badge/Update_Log-v5.0-orange?style=for-the-badge)](update_log.md)  
+[![](https://img.shields.io/badge/Update_Log-v5.1-orange?style=for-the-badge)](update_log.md)  
 
 > [!IMPORTANT]
 > The current branch is built using Rust  
@@ -25,7 +25,7 @@
 
 ## Usage
 1. **Download Script**     
-  [![](https://img.shields.io/badge/Release-v5.0-purple?style=for-the-badge&logo=Github)](https://github.com/yu13140/EHoRY/releases/tag/v5.0)
+  [![](https://img.shields.io/badge/Release-v5.1-purple?style=for-the-badge&logo=Github)](https://github.com/yu13140/EHoRY/releases/tag/v5.1)
 
 2. **Run as Root**  
    ```bash

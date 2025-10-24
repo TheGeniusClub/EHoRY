@@ -1,0 +1,26 @@
+name: ✨ Feature request
+description: Suggest an idea or feature for this project
+title: "[Feature]"
+labels: ["enhancement"]
+assignees:
+  - yu13140
+
+body:
+  - type: textarea
+    attributes:
+      label: Feature Description
+      description: Please provide a clear and concise description of the feature you would like to see.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Why is this feature needed?
+      description: Explain the problem this feature would solve. Why is it helpful for the project?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Additional Context
+      description: Provide any extra context, screenshots, or links that can help us understand your request.

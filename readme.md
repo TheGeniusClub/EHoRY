@@ -1,11 +1,11 @@
 # EHoRY
 
-##### 一个用于隐藏Android设备Root状态和绕过检测的综合脚本工具。
+#### 一个用于隐藏Android设备Root状态和绕过检测的综合脚本工具。
 
-[简体中文](readme.md) | [English](readme_en.md)
+**简体中文** | [English](readme_en.md)
 
 ![](https://img.shields.io/badge/Platform-Android-green?logo=Android&style=for-the-badge)  
-[![](https://img.shields.io/badge/Update_Log-v5.0-orange?style=for-the-badge)](update_log.md)  
+[![](https://img.shields.io/badge/Update_Log-v5.1-orange?style=for-the-badge)](update_log.md)  
 
 > [!IMPORTANT]
 > 当前分支为使用Rust构建的分支  
@@ -26,7 +26,7 @@
 
 ## 使用方法
 1. **下载脚本**  
-  [![](https://img.shields.io/badge/Release-v5.0-purple?style=for-the-badge&logo=Github)](https://github.com/yu13140/EHoRY/releases/tag/v5.0)
+  [![](https://img.shields.io/badge/Release-v5.1-purple?style=for-the-badge&logo=Github)](https://github.com/yu13140/EHoRY/releases/tag/v5.1)
 
 2. **以Root权限运行**
    ```bash

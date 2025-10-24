@@ -1,0 +1,81 @@
+name: Build and Release
+
+permissions:
+  contents: write
+  actions: write
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: "Build EHoRY"
+    uses: ./.github/workflows/build.yml
+
+  release:
+    name: "Release EHoRY"
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      REPO_OWNER: yu13140
+      REPO_NAME: EHoRY
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_NOTES: |
+        Automated release for EHoRY
+            
+        - Build Date: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        - Commit: ${{ github.sha }}
+        - Built for: aarch64-linux-android
+            
+        [Update Log](https://github.com/TheGeniusClub/EHoRY/blob/master/update_log.md)
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: ./artifacts
+
+      - name: Generate New Tag
+        run: |
+          NEW_TAG="v5.1"
+          echo "New tag: $NEW_TAG"
+          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+
+      - name: Create Git Tag
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git
+          git tag ${{ env.NEW_TAG }}
+          git push --tag || true
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ env.NEW_TAG }}
+          prerelease: false
+          release_name: ${{ env.NEW_TAG }}
+          body: ${{ env.RELEASE_NOTES }}
+
+      - name: Upload Release Assets Dynamically
+        run: |
+          # Loop through all files in the downloaded-artifacts directory
+          for file in ./artifacts/**/*; do
+              # Skip directories
+              if [ -d "$file" ]; then
+                  continue
+              fi
+
+              # Upload the file to the GitHub release
+              echo "Uploading $file..."
+              gh release upload ${{ env.NEW_TAG }} "$file"
+          done           
+
+      - name: Display Release Info
+        run: |
+          echo "🎉 Release ${{ env.NEW_TAG }} created successfully!"
+          echo "📦 Artifacts uploaded:"
+          find ./artifacts -type f -exec echo "  - {}" \;
