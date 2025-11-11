@@ -22,8 +22,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_NOTES: |
         Automated release for EHoRY
-            
-        - Build Date: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
         - Commit: ${{ github.sha }}
         - Built for: aarch64-linux-android
             
@@ -63,6 +62,7 @@ jobs:
       - name: Upload Release Assets Dynamically
         run: |
           # Loop through all files in the downloaded-artifacts directory
+          ls -aR ./artifacts
           for file in ./artifacts/**/*; do
               # Skip directories
               if [ -d "$file" ]; then
