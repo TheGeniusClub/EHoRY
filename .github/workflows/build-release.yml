@@ -61,18 +61,9 @@ jobs:
 
       - name: Upload Release Assets Dynamically
         run: |
-          # Loop through all files in the downloaded-artifacts directory
-          ls -aR ./artifacts
-          for file in ./artifacts/**/*; do
-              # Skip directories
-              if [ -d "$file" ]; then
-                  continue
-              fi
-
-              # Upload the file to the GitHub release
-              echo "Uploading $file..."
-              gh release upload ${{ env.NEW_TAG }} "$file"
-          done           
+          file="./artifacts/EHoRY.sh"
+          echo "Uploading $file..."
+          gh release upload ${{ env.NEW_TAG }} "$file"
 
       - name: Display Release Info
         run: |
